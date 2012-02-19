@@ -14,16 +14,16 @@ import frp.utils.CmdLineTools;
 
 public class RTIAnalysis {
 
-	private int MAX_SET_SIZE = 12;
-
 	private static final int I_TOP = 0;
 	private static final int I_OUT = 1;
 	private static final int I_HTL = 2;
-	private static final int I_HELP = 3;
+	private static final int I_MAGS = 3;
+	private static final int I_HELP = 4;
 	private static final String[][] PROG_ARGS = {
 			{ "-t", "(required) Topology file name." },
 			{ "-o", "(required) Output file name." },
 			{ "-htl", "(required) Max hops to live count." },
+			{ "-mags", "(required) Max Attack Group Size." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	private RTIAnalysis(String[] args) {
@@ -41,6 +41,10 @@ public class RTIAnalysis {
 
 			String topologyFileName = CmdLineTools.getRequiredArg(
 					CmdLineTools.getName(PROG_ARGS, I_TOP), lwArgs);
+			
+			// Max Attack Group Size
+			int maxAGS = Integer.parseInt(CmdLineTools.getRequiredArg(
+					CmdLineTools.getName(PROG_ARGS, I_MAGS), lwArgs));
 
 			// Max HTL
 			int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(
@@ -65,7 +69,7 @@ public class RTIAnalysis {
 			Hashtable<AttackPair, AttackPair> attackpairs = AttackPair
 					.extractAttackPairs(intersections);
 
-			for (int i = 0; i < MAX_SET_SIZE; i++) {
+			for (int i = 0; i < maxAGS; i++) {
 				System.out.println("Analysing set size "+i+" ...");
 				AttackSizeSet attSet = new AttackSizeSet(i, attackpairs,
 						topology.getAllNodes());
