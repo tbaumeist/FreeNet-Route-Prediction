@@ -6,6 +6,7 @@ import frp.routing.Node;
 
 public class AttackSizeSet {
 	private int subSetSize;
+	private int totalNodeCount;
 	private AttackSet maxTargets = null;
 	private AttackSet minTargets = null;
 	private long runningTotal = 0;
@@ -16,7 +17,7 @@ public class AttackSizeSet {
 	public AttackSizeSet(int subSetSize,
 			Hashtable<AttackPair, AttackPair> attackPair, List<Node> allNodes) {
 		this.subSetSize = subSetSize;
-
+		this.totalNodeCount = allNodes.size();
 		long t = System.currentTimeMillis();
 
 		tryAllCombinations(attackPair, new ArrayList<Node>(),
@@ -43,7 +44,8 @@ public class AttackSizeSet {
 	}
 	
 	public String toStringCSV() {
-		String s = this.subSetSize + "," + this.minTargets.getTargets();
+		String s = this.subSetSize + "," + this.totalNodeCount;
+		s += "," + this.minTargets.getTargets();
 		s += ","+this.avgTargets + ","+this.maxTargets.getTargets();
 		s += ",Min[" + this.minTargets + "]";
 		s += ",Max[" + this.maxTargets + "]";
