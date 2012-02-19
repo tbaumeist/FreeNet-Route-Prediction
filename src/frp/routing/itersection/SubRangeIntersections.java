@@ -16,6 +16,10 @@ public class SubRangeIntersections {
 		this.confidence = insertPath.getPathConfidence();
 		construct(pathRequestSets);
 	}
+	
+	public Path getInsertPath(){
+		return this.insertPath;
+	}
 
 	public List<RequestNodeIntersections> getRequestNodeIntersects() {
 		return this.requestNodes;

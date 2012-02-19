@@ -3,7 +3,11 @@ package frp.routing;
 import java.util.ArrayList;
 import java.util.List;
 
+import frp.main.rtiAnalysis.AttackPair;
 import frp.routing.itersection.InsertNodeIntersections;
+import frp.routing.itersection.Intersection;
+import frp.routing.itersection.RequestNodeIntersections;
+import frp.routing.itersection.SubRangeIntersections;
 import frp.utils.Pair;
 
 public class RoutingManager {
@@ -36,7 +40,7 @@ public class RoutingManager {
 		return pathSets;
 	}
 
-	public List<InsertNodeIntersections> calculateNodeIntersections(
+	public List<Intersection> calculateNodeIntersections(
 			List<Pair<Double, String>> startNodes, Topology top)
 			throws Exception {
 
@@ -48,11 +52,24 @@ public class RoutingManager {
 		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(startNodes,
 				top, false);
 
-		for ( Node n : top.getAllNodes()){
-			nodeIntersects.add(new InsertNodeIntersections(n, pathInsertSets, pathRequestSets, this.resetHTL));
+		for (Node n : top.getAllNodes()) {
+			nodeIntersects.add(new InsertNodeIntersections(n, pathInsertSets,
+					pathRequestSets, this.resetHTL));
 		}
 
-		return nodeIntersects;
+		// copy to intersections objects
+		List<Intersection> intersections = new ArrayList<Intersection>();
+		for (InsertNodeIntersections insert : nodeIntersects) {
+			for (SubRangeIntersections subRange : insert
+					.getSubRangeIntersections()) {
+				for (RequestNodeIntersections request : subRange
+						.getRequestNodeIntersects()) {
+					intersections.add(new Intersection(insert, subRange,
+							request, this.maxHTL));
+				}
+			}
+		}
+		return intersections;
 	}
 
 	private List<Pair<Double, String>> checkStartNodes(

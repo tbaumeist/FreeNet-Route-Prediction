@@ -3,6 +3,7 @@ package frp.main.rtiAnalysis;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import frp.dataFileReaders.TopologyFileReader;
 import frp.routing.RoutingManager;
 import frp.routing.Topology;
 import frp.routing.itersection.InsertNodeIntersections;
+import frp.routing.itersection.Intersection;
 import frp.utils.CmdLineTools;
 
 public class RTIAnalysis {
@@ -63,8 +65,17 @@ public class RTIAnalysis {
 			// Calculate intersections
 			System.out.println("Calculating intersections ...");
 			RoutingManager manager = new RoutingManager(maxHTL);
-			List<InsertNodeIntersections> intersections = manager
+			List<Intersection> intersections = manager
 					.calculateNodeIntersections(null, topology);
+			
+			// output all the intersection points
+			int topX = 50;
+			Collections.sort(intersections);
+			File topXFile = new File(outputFileName + ".intersections" );
+			PrintStream topXWriter = new PrintStream(topXFile);
+			for ( Intersection i : intersections){
+				topXWriter.println(i);
+			}
 
 			Hashtable<AttackPair, AttackPair> attackpairs = AttackPair
 					.extractAttackPairs(intersections);

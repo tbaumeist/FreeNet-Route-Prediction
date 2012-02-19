@@ -6,6 +6,7 @@ import frp.routing.*;
 
 public class RequestNodeIntersections implements Comparable<Object> {
 	private Path requestPath;
+	private Node intersectNode;
 	private double confidence;
 	private SubRange intersectionRange;
 	private List<Node> possibleTargetNodes = new ArrayList<Node>();
@@ -15,6 +16,7 @@ public class RequestNodeIntersections implements Comparable<Object> {
 		this.requestPath = requestPath;
 		this.confidence = insertPath.getPathConfidence() * requestPath.getPathConfidence();
 		this.intersectionRange = requestPath.getRange().getIntersection(insertPath.getRange());
+		this.intersectNode = intersectNode;
 		for (Node n : requestPath.getNodes()) {
 			if (n.equals(intersectNode))
 				break;
@@ -23,6 +25,14 @@ public class RequestNodeIntersections implements Comparable<Object> {
 			this.possibleTargetNodes.add(n);
 		}
 	}
+	
+	public Path getRequestPath(){
+		return this.requestPath;
+	}
+	
+	public Node getIntersectNode(){
+		return this.intersectNode;
+	}
 
 	public Node getStartNode() {
 		return this.requestPath.getStartNode();
@@ -30,6 +40,14 @@ public class RequestNodeIntersections implements Comparable<Object> {
 
 	public List<Node> getPossibleTargetNodes() {
 		return this.possibleTargetNodes;
+	}
+	
+	public SubRange getIntersectSubRange(){
+		return this.intersectionRange;
+	}
+	
+	public double getConfidence(){
+		return this.confidence;
 	}
 
 	@Override

@@ -6,28 +6,24 @@ import java.util.List;
 
 import frp.routing.Node;
 import frp.routing.itersection.InsertNodeIntersections;
+import frp.routing.itersection.Intersection;
 import frp.routing.itersection.RequestNodeIntersections;
 import frp.routing.itersection.SubRangeIntersections;
 
 public class AttackPair implements Comparable<Object> {
 
 	public static Hashtable<AttackPair, AttackPair> extractAttackPairs(
-			List<InsertNodeIntersections> intersections) {
+			List<Intersection> intersections) {
 		
 		Hashtable<AttackPair, AttackPair> pairs = new Hashtable<AttackPair, AttackPair>();
 		
-		for(InsertNodeIntersections insert : intersections){
-			for(SubRangeIntersections subRange  : insert.getSubRangeIntersections()){
-				for( RequestNodeIntersections request : subRange.getRequestNodeIntersects()){
-
-					AttackPair pair = new AttackPair(insert.getStartNode(), request.getStartNode());
-					if(!pairs.containsKey(pair))
-						pairs.put(pair, pair);
-					
-					pair = pairs.get(pair);
-					pair.addTargetNodes(request.getPossibleTargetNodes());
-				}
-			}
+		for(Intersection inter : intersections){
+			AttackPair pair = new AttackPair(inter.getInsertStartNode(), inter.getRequestStartNode());
+			if(!pairs.containsKey(pair))
+				pairs.put(pair, pair);
+			
+			pair = pairs.get(pair);
+			pair.addTargetNodes(inter.getPossibleTargetNodes());
 		}
 		return pairs;
 	}

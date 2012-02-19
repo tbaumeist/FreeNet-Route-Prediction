@@ -43,20 +43,20 @@ public class Path implements Comparable<Object> {
 
 	public List<Node> getNodes() {
 		List<Node> nodes = new CircleList<Node>();
-		for (int i = 0 ; i < this.ranges.size(); i++){
-			if(this.htls.get(i) <= 0)
+		for (int i = 0; i < this.ranges.size(); i++) {
+			if (this.htls.get(i) <= 0)
 				break;
 			SubRange rr = this.ranges.get(i);
 			nodes.add(rr.getNode());
 		}
-			
+
 		return nodes;
 	}
-	
+
 	public List<Node> getExtraNodes() {
 		List<Node> nodes = new CircleList<Node>();
-		for (int i = 0 ; i < this.ranges.size(); i++){
-			if(this.htls.get(i) > 0)
+		for (int i = 0; i < this.ranges.size(); i++) {
+			if (this.htls.get(i) > 0)
 				continue;
 			SubRange rr = this.ranges.get(i);
 			nodes.add(rr.getNode());
@@ -75,7 +75,7 @@ public class Path implements Comparable<Object> {
 	public double getPathConfidence() {
 		return 1.0 / (double) getTieCount(false);
 	}
-	
+
 	public double getPathConfidenceWithProbStoreNodes() {
 		return 1.0 / (double) getTieCount(true);
 	}
@@ -83,16 +83,16 @@ public class Path implements Comparable<Object> {
 	public int getTieCount(boolean includeProbStore) {
 		return getTieCountToNode(null, includeProbStore);
 	}
-	
+
 	public int getTieCountToNode(Node stopNode, boolean includeProbStore) {
 		int tie = 0;
 		int size = 0;
-		for(int i =0 ; i < this.ranges.size();i++){
-			
+		for (int i = 0; i < this.ranges.size(); i++) {
+
 			// stop if not including the probably storage nodes
-			if(!includeProbStore && this.htls.get(i) <= 0)
+			if (!includeProbStore && this.htls.get(i) <= 0)
 				break;
-			
+
 			SubRange rr = this.ranges.get(i);
 			tie += rr.getTieCount();
 			size++;
@@ -103,27 +103,42 @@ public class Path implements Comparable<Object> {
 		return tie - size + 1;
 	}
 	
-public List<Node> getProbableStoreNodes(int hopReset) {
-		
+	public List<Node> getPathUpToNode(Node stop){
+		List<Node> nodes = new ArrayList<Node>();
+		for (int i = 0; i < this.ranges.size(); i++) {
+			SubRange rr = this.ranges.get(i);
+			nodes.add(rr.getNode());
+			if (rr.getNode().equals(stop))
+				break;
+		}
+		return nodes;
+	}
+
+	public List<Node> getProbableStoreNodes(int hopReset) {
+
 		List<Node> nodes = new ArrayList<Node>();
 		for (int i = 0; i < this.htls.size(); i++) {
 			// htl is positive
 			// htl is <= hopReset
 			// it is not the first node in path
-			if (this.htls.get(i) > 0 && i > 0 &&
-					this.htls.get(i) <= hopReset) // first node with htl of 1
-				nodes.add( this.ranges.get(i).getNode() );
+			if (this.htls.get(i) > 0 && i > 0 && this.htls.get(i) <= hopReset) // first
+																				// node
+																				// with
+																				// htl
+																				// of
+																				// 1
+				nodes.add(this.ranges.get(i).getNode());
 		}
 
 		return nodes;
 	}
 
 	public List<String> getProbableStoreNodeIds(int hopReset) {
-		
+
 		List<Node> nodes = getProbableStoreNodes(hopReset);
 		List<String> nodeIds = new ArrayList<String>();
-		
-		for(Node n : nodes){
+
+		for (Node n : nodes) {
 			nodeIds.add(n.getID());
 		}
 
@@ -142,8 +157,8 @@ public List<Node> getProbableStoreNodes(int hopReset) {
 		if (this.getNodes().size() != cmp.getNodes().size())
 			return false;
 		for (int i = 0; i < this.getNodes().size(); i++) {
-			if (!this.getNodes().get(i).getID().equals(
-					cmp.getNodes().get(i).getID())) {
+			if (!this.getNodes().get(i).getID()
+					.equals(cmp.getNodes().get(i).getID())) {
 				return false;
 			}
 		}
@@ -166,8 +181,10 @@ public List<Node> getProbableStoreNodes(int hopReset) {
 		String out = "";
 		if (!getSuccess())
 			out += "FAILED ";
-		out += "| 1/" + getTieCount(false) + " " + 1.0 / getTieCount(false) + " | ";
-		out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0 / getTieCount(true) + " | ";
+		out += "| 1/" + getTieCount(false) + " " + 1.0 / getTieCount(false)
+				+ " | ";
+		out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0
+				/ getTieCount(true) + " | ";
 		out += getRange() + " -> ";
 		for (int i = 0; i < this.ranges.size(); i++) {
 			out += this.ranges.get(i).getNode() + "(Tie="
@@ -182,19 +199,20 @@ public List<Node> getProbableStoreNodes(int hopReset) {
 		String out = "";
 
 		for (int i = 0; i < this.ranges.size(); i++) {
-			if(this.htls.get(i) <= 0)
+			if (this.htls.get(i) <= 0)
 				break;
-			out += "("+this.htls.get(i)+")"+this.ranges.get(i).getNode().getID() + ", ";
+			out += "(" + this.htls.get(i) + ")"
+					+ this.ranges.get(i).getNode().getID() + ", ";
 		}
 
 		return out;
 	}
-	
+
 	public String toStringExtraNodesSimple() {
 		String out = "";
 
 		for (int i = 0; i < this.ranges.size(); i++) {
-			if(this.htls.get(i) > 0)
+			if (this.htls.get(i) > 0)
 				continue;
 			out += this.ranges.get(i).getNode().getID() + ", ";
 		}
@@ -202,4 +220,3 @@ public List<Node> getProbableStoreNodes(int hopReset) {
 		return out;
 	}
 }
-
