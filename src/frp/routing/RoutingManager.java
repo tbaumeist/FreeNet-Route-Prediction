@@ -3,6 +3,7 @@ package frp.routing;
 import java.util.ArrayList;
 import java.util.List;
 
+import frp.routing.itersection.InsertNodeIntersections;
 import frp.utils.Pair;
 
 public class RoutingManager {
@@ -17,8 +18,8 @@ public class RoutingManager {
 		this.maxHTL = maxHTL;
 		this.resetHTL = this.maxHTL - this.insertResetHop;
 	}
-	
-	public int getResetHTL(){
+
+	public int getResetHTL() {
 		return this.resetHTL;
 	}
 
@@ -35,29 +36,24 @@ public class RoutingManager {
 		return pathSets;
 	}
 
-	// public List<NodeIntersect> calculateNodeIntersects(int htl,
-	// List<Pair<Double, String>> startNodes,
-	// Topology top) throws Exception {
-	//
-	// startNodes = checkStartNodes(startNodes, top);
-	// List<NodeIntersect> nodeIntersects = new ArrayList<NodeIntersect>();
-	//
-	// List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(htl,
-	// startNodes,
-	// top, true);
-	// List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(htl,
-	// startNodes,
-	// top, false);
-	//
-	// for( PathSet[] psArray : pathInsertSets ){
-	// for(PathSet ps : psArray)
-	// {
-	// nodeIntersects.add(new NodeIntersect(ps, pathRequestSets));
-	// }
-	// }
-	//
-	// return nodeIntersects;
-	// }
+	public List<InsertNodeIntersections> calculateNodeIntersections(
+			List<Pair<Double, String>> startNodes, Topology top)
+			throws Exception {
+
+		startNodes = checkStartNodes(startNodes, top);
+		List<InsertNodeIntersections> nodeIntersects = new ArrayList<InsertNodeIntersections>();
+
+		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(startNodes,
+				top, true);
+		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(startNodes,
+				top, false);
+
+		for ( Node n : top.getAllNodes()){
+			nodeIntersects.add(new InsertNodeIntersections(n, pathInsertSets, pathRequestSets, this.resetHTL));
+		}
+
+		return nodeIntersects;
+	}
 
 	private List<Pair<Double, String>> checkStartNodes(
 			List<Pair<Double, String>> startNodes, Topology top) {

@@ -9,7 +9,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import frp.predModelEval.StoredWordData;
+import frp.main.predModelEval.StoredWordData;
 
 public class WordMapFileReader {
 	private File dataFile;

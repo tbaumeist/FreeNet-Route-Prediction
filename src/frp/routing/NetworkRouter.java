@@ -21,7 +21,7 @@ public class NetworkRouter {
 		List<Path> paths = new ArrayList<Path>();
 		List<Node> visited = new ArrayList<Node>();
 		Path currentPath = new Path();
-		RouteRange startRange = new RouteRange(start, 0, 0);
+		SubRange startRange = new SubRange(start, 0, 0);
 		int resetHop = -1;
 
 		if (isInsertPath) // reset hop only used for inserts
@@ -39,7 +39,7 @@ public class NetworkRouter {
 	}
 
 	private boolean _findPaths(List<Path> paths, Path currentPath,
-			List<Node> visited, RouteRange range, int hopsToLive, int resetHop)
+			List<Node> visited, SubRange range, int hopsToLive, int resetHop)
 			throws Exception {
 
 		currentPath.setRange(range);
@@ -59,11 +59,11 @@ public class NetworkRouter {
 
 		// List<RouteRange> allRanges = getRanges(range, visited,
 		// hopsToLive < resetHop);
-		List<RouteRange> allRanges = getRanges(range, visited, false);
+		List<SubRange> allRanges = getRanges(range, visited, false);
 
 		int pathsFound = 0;
 
-		for (RouteRange rr : allRanges) {
+		for (SubRange rr : allRanges) {
 			if (range.overlaps(rr)) {
 				int hopMod = 0;
 				if (rr.getIsRetry() && hopsToLive <= resetHop) {
@@ -82,7 +82,8 @@ public class NetworkRouter {
 		}
 		if (pathsFound == 0) {
 			Path failed = currentPath.clone();
-			failed.setSuccess(false);
+			if(hopsToLive > 0) // only consider it a failure, if it occurred during regular routing
+				failed.setSuccess(false);
 			paths.add(failed);
 		}
 
@@ -101,34 +102,34 @@ public class NetworkRouter {
 		}
 	}
 
-	private List<RouteRange> getRangesSimple(RouteRange range,
+	private List<SubRange> getRangesSimple(SubRange range,
 			List<Node> visited, boolean includeSelf) {
 
-		List<RouteRange> ranges = range.getNode().getPathsOut(visited,
+		List<SubRange> ranges = range.getNode().getPathsOut(visited,
 				includeSelf);
 		ranges = splitRanges(range, ranges);
 
 		return ranges;
 	}
 
-	private List<RouteRange> getRanges(RouteRange range, List<Node> visited,
+	private List<SubRange> getRanges(SubRange range, List<Node> visited,
 			boolean includeSelf) {
 
-		List<RouteRange> ranges = getRangesSimple(range, visited, includeSelf);
+		List<SubRange> ranges = getRangesSimple(range, visited, includeSelf);
 		List<Node> visitedOnlyMe = new ArrayList<Node>();
 		if (visited.size() > 1) // prev node
 			visitedOnlyMe.add(visited.get(visited.size() - 2));
 		visitedOnlyMe.add(range.getNode()); // current node
-		List<RouteRange> allRanges = getRangesSimple(range, visitedOnlyMe,
+		List<SubRange> allRanges = getRangesSimple(range, visitedOnlyMe,
 				includeSelf);
 
-		for (RouteRange rr : allRanges) {
+		for (SubRange rr : allRanges) {
 			if (visited.contains(rr.getNode()))
 				ranges = splitRanges(rr, ranges);
 		}
 
-		for (RouteRange rr : ranges) {
-			for (RouteRange rr2 : allRanges) {
+		for (SubRange rr : ranges) {
+			for (SubRange rr2 : allRanges) {
 				if (visited.contains(rr2.getNode())) {
 					if (rr.overlaps(rr2)) {
 						rr.setIsRetry(true);
@@ -141,16 +142,16 @@ public class NetworkRouter {
 	}
 
 	private boolean shouldStop(int hopsToLive) {
-		// return hopsToLive <= 0;
-		return hopsToLive <= -4; // include 4 additional probable storage nodes
+		 return hopsToLive <= 0;
+		//return hopsToLive <= -4; // include 4 additional probable storage nodes
 	}
 
-	private List<RouteRange> splitRanges(RouteRange range,
-			List<RouteRange> ranges) {
+	private List<SubRange> splitRanges(SubRange range,
+			List<SubRange> ranges) {
 
-		List<RouteRange> newRanges = new ArrayList<RouteRange>();
+		List<SubRange> newRanges = new ArrayList<SubRange>();
 
-		for (RouteRange rr : ranges) {
+		for (SubRange rr : ranges) {
 			if (range.overlaps(rr)) {
 
 				newRanges.addAll(range.splitRangeOverMe(rr));

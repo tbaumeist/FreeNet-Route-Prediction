@@ -99,13 +99,13 @@ public class Node extends INode {
 		return this.getLocation() + " {" + this.id + "}";
 	}
 
-	public List<RouteRange> getPathsOut() {
+	public List<SubRange> getPathsOut() {
 		List<Node> ignoreNodes = new ArrayList<Node>();
 		ignoreNodes.add(this);
 		return getPathsOut(ignoreNodes, false);
 	}
 
-	public List<RouteRange> getPathsOut(List<Node> ignoreNodes,
+	public List<SubRange> getPathsOut(List<Node> ignoreNodes,
 			boolean includeSelf) {
 		List<_Node> allPeers = new CircleList<_Node>();
 		List<Node> directPeers = getNeighbors(ignoreNodes);
@@ -132,9 +132,9 @@ public class Node extends INode {
 							.getLocation()));
 		}
 
-		List<RouteRange> rangesList = new CircleList<RouteRange>();
+		List<SubRange> rangesList = new CircleList<SubRange>();
 		for (int i = 0; i < allPeers.size(); i++) {
-			rangesList.add(new RouteRange(allPeers.get(i).getNode(),
+			rangesList.add(new SubRange(allPeers.get(i).getNode(),
 					allPeers.get(i - 1).getMid(), allPeers.get(i).getMid(),
 					allPeers.get(i).getTieCount(),
 					allPeers.get(i).getNode() == this));

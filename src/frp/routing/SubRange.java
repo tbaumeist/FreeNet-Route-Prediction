@@ -5,7 +5,7 @@ import java.util.List;
 
 import frp.utils.DistanceTools;
 
-public class RouteRange implements Comparable<Object> {
+public class SubRange implements Comparable<Object> {
 
 	private Node toNode;
 	private double rangeStart, rangeStop;
@@ -13,12 +13,12 @@ public class RouteRange implements Comparable<Object> {
 	private int tieCount = 0;
 	private boolean isSelfRoute = false;
 
-	public RouteRange(Node toNode, double rangeStart, double rangeStop, int tieCount, boolean isSelfRoute){
+	public SubRange(Node toNode, double rangeStart, double rangeStop, int tieCount, boolean isSelfRoute){
 		this(toNode, rangeStart, rangeStop);
 		this.tieCount = tieCount;
 		this.isSelfRoute = isSelfRoute;
 	}
-	public RouteRange(Node toNode, double rangeStart, double rangeStop) {
+	public SubRange(Node toNode, double rangeStart, double rangeStop) {
 		this.toNode = toNode;
 		this.rangeStart = DistanceTools.round(rangeStart);
 		this.rangeStop = DistanceTools.round(rangeStop);
@@ -59,7 +59,7 @@ public class RouteRange implements Comparable<Object> {
 		return this.rangeStart <= pt || pt < this.rangeStop;
 	}
 
-	public boolean overlaps(RouteRange range) {
+	public boolean overlaps(SubRange range) {
 		if (range == null)
 			return false;
 
@@ -75,11 +75,11 @@ public class RouteRange implements Comparable<Object> {
 		return this.rangeStart == this.rangeStop;
 	}
 
-	public List<RouteRange> splitRangeOverMe(RouteRange range) {
-		List<RouteRange> ranges = new ArrayList<RouteRange>();
+	public List<SubRange> splitRangeOverMe(SubRange range) {
+		List<SubRange> ranges = new ArrayList<SubRange>();
 
 		if (range.isEntireRange()) { // special case
-			ranges.add(new RouteRange(range.getNode(), this.rangeStart,
+			ranges.add(new SubRange(range.getNode(), this.rangeStart,
 					this.rangeStop, range.tieCount, range.isSelfRoute()));
 			return ranges;
 		}
@@ -90,20 +90,20 @@ public class RouteRange implements Comparable<Object> {
 
 		double prev = range.rangeStart;
 		for (double d : edges) {
-			ranges.add(new RouteRange(range.getNode(), prev, d, range.tieCount, range.isSelfRoute()));
+			ranges.add(new SubRange(range.getNode(), prev, d, range.tieCount, range.isSelfRoute()));
 			prev = d;
 		}
-		ranges.add(new RouteRange(range.getNode(), prev, range.rangeStop, range.tieCount, range.isSelfRoute()));
+		ranges.add(new SubRange(range.getNode(), prev, range.rangeStop, range.tieCount, range.isSelfRoute()));
 
 		return ranges;
 	}
 	
-	public RouteRange getIntersection(RouteRange rr){
+	public SubRange getIntersection(SubRange rr){
 		double start = Math.max(this.rangeStart, rr.rangeStart);
 		double myStop = wrapsAround() ? this.rangeStop + 1 : this.rangeStop;
 		double thereStop = rr.wrapsAround() ? rr.rangeStop + 1 : rr.rangeStop;
 		double stop = Math.min(myStop, thereStop);
-		return new RouteRange(this.toNode, start, stop % 1, this.tieCount, this.isSelfRoute());
+		return new SubRange(this.toNode, start, stop % 1, this.tieCount, this.isSelfRoute());
 	}
 
 	@Override
@@ -115,14 +115,14 @@ public class RouteRange implements Comparable<Object> {
 	public int compareTo(Object obj) {
 		if (obj == null)
 			return 1;
-		if (!(obj instanceof RouteRange))
+		if (!(obj instanceof SubRange))
 			return 1;
 
-		RouteRange r = (RouteRange) obj;
+		SubRange r = (SubRange) obj;
 		return new Double(this.rangeStart).compareTo(new Double(r.rangeStart));
 	}
 
-	private List<Double> edgesOverlap(RouteRange r1, RouteRange r2) {
+	private List<Double> edgesOverlap(SubRange r1, SubRange r2) {
 		List<Double> overlaps = new ArrayList<Double>();
 		if (r1.wrapsAround() && r2.wrapsAround()) {
 			if (r1.rangeStart >= r2.rangeStart

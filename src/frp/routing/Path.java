@@ -7,9 +7,9 @@ import frp.utils.CircleList;
 
 public class Path implements Comparable<Object> {
 
-	private List<RouteRange> ranges = new ArrayList<RouteRange>();
+	private List<SubRange> ranges = new ArrayList<SubRange>();
 	private List<Integer> htls = new ArrayList<Integer>();
-	private RouteRange range = null;
+	private SubRange range = null;
 	// private double preference = 0;
 	private boolean successful = true;
 
@@ -21,15 +21,15 @@ public class Path implements Comparable<Object> {
 		return this.successful;
 	}
 
-	public void setRange(RouteRange range) {
+	public void setRange(SubRange range) {
 		this.range = range;
 	}
 
-	public RouteRange getRange() {
+	public SubRange getRange() {
 		return this.range;
 	}
 
-	public void addNodeAsRR(RouteRange r, int htl) {
+	public void addNodeAsRR(SubRange r, int htl) {
 		// if(this.nodes.contains(n))
 		// return;
 		this.ranges.add(r);
@@ -46,7 +46,7 @@ public class Path implements Comparable<Object> {
 		for (int i = 0 ; i < this.ranges.size(); i++){
 			if(this.htls.get(i) <= 0)
 				break;
-			RouteRange rr = this.ranges.get(i);
+			SubRange rr = this.ranges.get(i);
 			nodes.add(rr.getNode());
 		}
 			
@@ -58,7 +58,7 @@ public class Path implements Comparable<Object> {
 		for (int i = 0 ; i < this.ranges.size(); i++){
 			if(this.htls.get(i) > 0)
 				continue;
-			RouteRange rr = this.ranges.get(i);
+			SubRange rr = this.ranges.get(i);
 			nodes.add(rr.getNode());
 		}
 		return nodes;
@@ -93,7 +93,7 @@ public class Path implements Comparable<Object> {
 			if(!includeProbStore && this.htls.get(i) <= 0)
 				break;
 			
-			RouteRange rr = this.ranges.get(i);
+			SubRange rr = this.ranges.get(i);
 			tie += rr.getTieCount();
 			size++;
 
@@ -102,20 +102,32 @@ public class Path implements Comparable<Object> {
 		}
 		return tie - size + 1;
 	}
-
-	public List<String> getProbableStoreNodeIds(int hopReset) {
+	
+public List<Node> getProbableStoreNodes(int hopReset) {
 		
-		List<String> nodes = new ArrayList<String>();
+		List<Node> nodes = new ArrayList<Node>();
 		for (int i = 0; i < this.htls.size(); i++) {
 			// htl is positive
-			// htl is <= 3
+			// htl is <= hopReset
 			// it is not the first node in path
 			if (this.htls.get(i) > 0 && i > 0 &&
 					this.htls.get(i) <= hopReset) // first node with htl of 1
-				nodes.add( this.ranges.get(i).getNode().getID() );
+				nodes.add( this.ranges.get(i).getNode() );
 		}
 
 		return nodes;
+	}
+
+	public List<String> getProbableStoreNodeIds(int hopReset) {
+		
+		List<Node> nodes = getProbableStoreNodes(hopReset);
+		List<String> nodeIds = new ArrayList<String>();
+		
+		for(Node n : nodes){
+			nodeIds.add(n.getID());
+		}
+
+		return nodeIds;
 	}
 
 	public Node getStartNode() {
