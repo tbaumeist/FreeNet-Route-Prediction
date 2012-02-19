@@ -3,7 +3,6 @@ package frp.routing;
 import java.util.ArrayList;
 import java.util.List;
 
-import frp.main.rtiAnalysis.AttackPair;
 import frp.routing.itersection.InsertNodeIntersections;
 import frp.routing.itersection.Intersection;
 import frp.routing.itersection.RequestNodeIntersections;
@@ -65,7 +64,7 @@ public class RoutingManager {
 				for (RequestNodeIntersections request : subRange
 						.getRequestNodeIntersects()) {
 					intersections.add(new Intersection(insert, subRange,
-							request, this.maxHTL));
+							request, this.maxHTL, this.resetHTL));
 				}
 			}
 		}

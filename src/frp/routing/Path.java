@@ -103,12 +103,12 @@ public class Path implements Comparable<Object> {
 		return tie - size + 1;
 	}
 	
-	public List<Node> getPathUpToNode(Node stop){
+	public List<Node> getPathUpToCacheAbleNode(Node stop, int hopReset){
 		List<Node> nodes = new ArrayList<Node>();
 		for (int i = 0; i < this.ranges.size(); i++) {
 			SubRange rr = this.ranges.get(i);
 			nodes.add(rr.getNode());
-			if (rr.getNode().equals(stop))
+			if (i > 0 && this.htls.get(i) <= hopReset && rr.getNode().equals(stop))
 				break;
 		}
 		return nodes;

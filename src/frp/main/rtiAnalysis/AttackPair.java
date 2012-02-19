@@ -5,10 +5,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import frp.routing.Node;
-import frp.routing.itersection.InsertNodeIntersections;
 import frp.routing.itersection.Intersection;
-import frp.routing.itersection.RequestNodeIntersections;
-import frp.routing.itersection.SubRangeIntersections;
 
 public class AttackPair implements Comparable<Object> {
 

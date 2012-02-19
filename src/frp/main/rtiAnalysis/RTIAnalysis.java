@@ -10,7 +10,6 @@ import java.util.List;
 import frp.dataFileReaders.TopologyFileReader;
 import frp.routing.RoutingManager;
 import frp.routing.Topology;
-import frp.routing.itersection.InsertNodeIntersections;
 import frp.routing.itersection.Intersection;
 import frp.utils.CmdLineTools;
 
@@ -69,7 +68,6 @@ public class RTIAnalysis {
 					.calculateNodeIntersections(null, topology);
 			
 			// output all the intersection points
-			int topX = 50;
 			Collections.sort(intersections);
 			File topXFile = new File(outputFileName + ".intersections" );
 			PrintStream topXWriter = new PrintStream(topXFile);

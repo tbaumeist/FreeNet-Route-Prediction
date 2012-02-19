@@ -13,16 +13,24 @@ public class Intersection implements Comparable<Intersection> {
 
 	public Intersection(InsertNodeIntersections insert,
 			SubRangeIntersections subRange, RequestNodeIntersections request,
-			int maxHTL) {
+			int maxHTL, int hopReset) {
 		this.insert = insert;
 		this.subRange = subRange;
 		this.request = request;
 		// custom confidence value, request confidence * (length of paths)
 		// shorter the better
-		double penalty = 1.0/(double)(maxHTL + 1);
-		int insertLength = this.subRange.getInsertPath().getPathUpToNode(this.request.getIntersectNode()).size();
-		int requestLength = this.request.getRequestPath().getPathUpToNode(this.request.getIntersectNode()).size();
-		this.confidence = request.getConfidence() * (1 - (penalty * insertLength)) * (1 - (penalty * requestLength));
+		double penalty = 1.0 / (double) (maxHTL + 1);
+		int insertLength = this.subRange
+				.getInsertPath()
+				.getPathUpToCacheAbleNode(this.request.getIntersectNode(),
+						hopReset).size();
+		int requestLength = this.request
+				.getRequestPath()
+				.getPathUpToCacheAbleNode(this.request.getIntersectNode(),
+						hopReset).size();
+		this.confidence = request.getConfidence()
+				* (1 - (penalty * insertLength))
+				* (1 - (penalty * requestLength));
 	}
 
 	public SubRange getIntersectSubRange() {
@@ -50,17 +58,21 @@ public class Intersection implements Comparable<Intersection> {
 		return new Double(this.getConfidence()).compareTo(new Double(o
 				.getConfidence())) * -1;
 	}
-	
+
 	@Override
 	public String toString() {
 		String s = "Confidence: " + this.getConfidence();
-		s += ", Insert: "+ this.getInsertStartNode();
+		s += ", Insert: " + this.getInsertStartNode();
 		s += ", Request: " + this.getRequestStartNode();
 		s += ", Intersect: " + this.request.getIntersectNode();
 		s += ", Range: " + this.getIntersectSubRange();
+		s += ", Targets:";
+		for (Node n : this.request.getPossibleTargetNodes())
+			s += n + " ";
 		s += ", Insert Path: " + this.subRange.getInsertPath().toStringSimple();
-		s += ", Request Path: " + this.request.getRequestPath().toStringSimple();
-		
+		s += ", Request Path: "
+				+ this.request.getRequestPath().toStringSimple();
+
 		return s;
 	}
 }
