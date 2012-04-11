@@ -1,3 +1,7 @@
+/**
+ * Convert the *.dot graph file into a *.graphml file.
+ */
+
 package frp.main.fileConverters;
 
 import java.io.BufferedReader;

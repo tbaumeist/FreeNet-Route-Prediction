@@ -27,12 +27,16 @@ public class Node extends INode {
 	public void removeNeighbors(List<Node> nodes) {
 		this.neighbors.removeAll(nodes);
 	}
-
-	public List<Node> getNeighbors() {
-		return getNeighbors(null);
+	
+	public boolean hasDirectNeighbor(Node n){
+		return this.getDirectNeighbors().contains(n);
 	}
 
-	public List<Node> getNeighbors(List<Node> ignoreNodes) {
+	public List<Node> getDirectNeighbors() {
+		return getDirectNeighbors(null);
+	}
+
+	public List<Node> getDirectNeighbors(List<Node> ignoreNodes) {
 		List<Node> ns = new CircleList<Node>();
 		ns.addAll(this.neighbors);
 
@@ -42,17 +46,17 @@ public class Node extends INode {
 		return ns;
 	}
 
-	public Node getNextClosestNeighborExcluding(double loc,
+	public Node getNextClosestPeerExcluding(double loc,
 			List<Node> excludeNodes, boolean onlyCloserThenMe) {
 
 		List<_Node> neighbors = new ArrayList<_Node>();
 		// 1 hop neighbors
-		for (Node n : getNeighbors(excludeNodes)) {
+		for (Node n : getDirectNeighbors(excludeNodes)) {
 			neighbors.add(new _Node(n, n.getLocation()));
 		}
 
 		// 2 hop neighbors
-		getTwoHopNeighbors(excludeNodes, neighbors);
+		getindirectNeighbors(excludeNodes, neighbors);
 
 		_Node closest = null;
 		double closestDiff = 1;
@@ -79,10 +83,10 @@ public class Node extends INode {
 		return closest.getNode();
 	}
 
-	private void getTwoHopNeighbors(List<Node> excludeNodes,
+	private void getindirectNeighbors(List<Node> excludeNodes,
 			List<_Node> neighbors) {
-		for (Node n : getNeighbors(excludeNodes)) {
-			for (Node n2 : n.getNeighbors(excludeNodes)) {
+		for (Node n : getDirectNeighbors(excludeNodes)) {
+			for (Node n2 : n.getDirectNeighbors(excludeNodes)) {
 				Node tmp = new Node(n2.getLocation(), "");
 				if (!neighbors.contains(tmp)) {
 					neighbors.add(new _Node(n, tmp.getLocation()));
@@ -108,10 +112,10 @@ public class Node extends INode {
 	public List<SubRange> getPathsOut(List<Node> ignoreNodes,
 			boolean includeSelf) {
 		List<_Node> allPeers = new CircleList<_Node>();
-		List<Node> directPeers = getNeighbors(ignoreNodes);
+		List<Node> directPeers = getDirectNeighbors(ignoreNodes);
 
 		// 2 hop neighbors
-		getTwoHopNeighbors(ignoreNodes, allPeers);
+		getindirectNeighbors(ignoreNodes, allPeers);
 
 		// direct peers get preference or peer of peer
 		allPeers.removeAll(directPeers); // remove peer of peer entry

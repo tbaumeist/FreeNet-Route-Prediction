@@ -1,4 +1,15 @@
-package frp.main.rtiAnalysis;
+/*
+ * This class will perform an analysis of how effective the RTI
+ * attack will be against a given topology. It looks at different
+ * attack node set sizes and calculates the number of nodes that
+ * can be attacked { minimum, maximum, average } number of nodes 
+ * that can be attacked.
+ * 
+ * Note: This is very slow code. It performs in combinatorial time.
+ * As the size of the attack set grows so does the time to calculate
+ * the effectiveness.
+ */
+package frp.main.rti.analysis;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -8,7 +19,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import frp.dataFileReaders.TopologyFileReader;
-import frp.routing.RoutingManager;
+import frp.main.rti.prediction.RTIPrediction;
 import frp.routing.Topology;
 import frp.routing.itersection.Intersection;
 import frp.utils.CmdLineTools;
@@ -36,13 +47,13 @@ public class RTIAnalysis {
 				return;
 			}
 
-			// // Arguments ////
+			// / Arguments
 			String outputFileName = CmdLineTools.getRequiredArg(
 					CmdLineTools.getName(PROG_ARGS, I_OUT), lwArgs);
 
 			String topologyFileName = CmdLineTools.getRequiredArg(
 					CmdLineTools.getName(PROG_ARGS, I_TOP), lwArgs);
-			
+
 			// Max Attack Group Size
 			int maxAGS = Integer.parseInt(CmdLineTools.getRequiredArg(
 					CmdLineTools.getName(PROG_ARGS, I_MAGS), lwArgs));
@@ -50,7 +61,7 @@ public class RTIAnalysis {
 			// Max HTL
 			int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(
 					CmdLineTools.getName(PROG_ARGS, I_HTL), lwArgs));
-			// END Arguments
+			// / END: Arguments
 
 			// output stream
 			File outputFile = new File(outputFileName);
@@ -61,25 +72,29 @@ public class RTIAnalysis {
 					topologyFileName);
 			Topology topology = topReader.readFile();
 
+			// / Get inputs to the analysis code
 			// Calculate intersections
-			System.out.println("Calculating intersections ...");
-			RoutingManager manager = new RoutingManager(maxHTL);
-			List<Intersection> intersections = manager
-					.calculateNodeIntersections(null, topology);
-			
+			RTIPrediction rtiPrediction = new RTIPrediction();
+			List<Intersection> intersections = rtiPrediction.run(topology,
+					maxHTL, outputFileName);
+
 			// output all the intersection points
 			Collections.sort(intersections);
-			File topXFile = new File(outputFileName + ".intersections" );
+			File topXFile = new File(outputFileName + ".intersections");
 			PrintStream topXWriter = new PrintStream(topXFile);
-			for ( Intersection i : intersections){
+			for (Intersection i : intersections) {
 				topXWriter.println(i);
 			}
+			topXWriter.close();
+			// / END: Get inputs to the analysis code
 
+			// / start of the interesting part of the code
+			// Calculate the effectiveness for different attack node set sizes
 			Hashtable<AttackPair, AttackPair> attackpairs = AttackPair
 					.extractAttackPairs(intersections);
 
 			for (int i = 0; i < maxAGS; i++) {
-				System.out.println("Analysing set size "+i+" ...");
+				System.out.println("Analysing set size " + i + " ...");
 				AttackSizeSet attSet = new AttackSizeSet(i, attackpairs,
 						topology.getAllNodes());
 				outputWriter.println(attSet.toStringCSV());
@@ -93,10 +108,10 @@ public class RTIAnalysis {
 	}
 
 	/**
+	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		new RTIAnalysis(args);
 	}
 

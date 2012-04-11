@@ -49,6 +49,15 @@ public class RequestNodeIntersections implements Comparable<Object> {
 	public double getConfidence(){
 		return this.confidence;
 	}
+	
+	public boolean targetNodeNotConnectedToRequestNodeExists(){
+		Node start = this.getStartNode();
+		for(Node n : this.getPossibleTargetNodes()){
+			if(!start.hasDirectNeighbor(n))
+				return true;
+		}
+		return false;
+	}
 
 	@Override
 	public String toString() {

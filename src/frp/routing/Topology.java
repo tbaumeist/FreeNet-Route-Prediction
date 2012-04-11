@@ -27,7 +27,7 @@ public class Topology {
 		String out = "";
 		for (Node n : getAllNodes()) {
 			out += n + " -> (";
-			for (Node n2 : n.getNeighbors()) {
+			for (Node n2 : n.getDirectNeighbors()) {
 				out += " " + n2 + ",";
 			}
 			out += ")\n";
@@ -51,12 +51,12 @@ public class Topology {
 		for (Node n : getAllNodes()) {
 			List<Node> removeNeighbors = new ArrayList<Node>();
 
-			for (Node n2 : n.getNeighbors()) {
-				if (!n2.getNeighbors().contains(n))
+			for (Node n2 : n.getDirectNeighbors()) {
+				if (!n2.getDirectNeighbors().contains(n))
 					removeNeighbors.add(n2);
 			}
 			n.removeNeighbors(removeNeighbors);
-			if (n.getNeighbors().isEmpty())
+			if (n.getDirectNeighbors().isEmpty())
 				removeNodes.add(n);
 		}
 		getAllNodes().removeAll(removeNodes);

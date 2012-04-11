@@ -70,6 +70,27 @@ public class SubRange implements Comparable<Object> {
 
 		return false;
 	}
+	
+	public boolean areAdjacent(SubRange range){
+		if(range == null)
+			return false;
+		
+		if(this.getStart() == range.getStop())
+			return true;
+		if(this.getStop() == range.getStart())
+			return true;
+		
+		return false;
+	}
+	
+	public SubRange addAdjacentRanges(SubRange range){
+		if(this.getStart() == range.getStop())
+			this.rangeStart = range.getStart();
+		if(this.getStop() == range.getStart())
+			this.rangeStop = range.getStop();
+			
+		return this;
+	}
 
 	public boolean isEntireRange() {
 		return this.rangeStart == this.rangeStop;

@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
-import frp.main.predModelEval.CommLog;
+import frp.main.insertModelEval.CommLog;
 
 public class CommLogFileReader {
 private String commFileName = "";

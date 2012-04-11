@@ -79,8 +79,13 @@ public class SubRangeIntersections {
 					if (!isUniquePath(this.insertPath, p, this.insertionNodes))
 						continue;
 
-					this.requestNodes.add(new RequestNodeIntersections(
-							this.insertPath, p, inter.get(0)));
+					RequestNodeIntersections r = new RequestNodeIntersections(
+							this.insertPath, p, inter.get(0));
+					
+					// Request Node = Announce Node Change: The request node
+					// is not a direct peer of at least one of the target nodes
+					if(r.targetNodeNotConnectedToRequestNodeExists())
+						this.requestNodes.add(r);
 				}
 			}
 		}
@@ -93,6 +98,7 @@ public class SubRangeIntersections {
 		// need at least 3 nodes in request path
 		if (nodes.size() <= 2)
 			return false;
+		
 		// the second node in request path is not a storage node
 		if (intersects.contains(nodes.get(1)))
 			return false;

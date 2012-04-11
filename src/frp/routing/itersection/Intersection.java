@@ -64,11 +64,11 @@ public class Intersection implements Comparable<Intersection> {
 		String s = "Confidence: " + this.getConfidence();
 		s += ", Insert: " + this.getInsertStartNode();
 		s += ", Request: " + this.getRequestStartNode();
-		s += ", Intersect: " + this.request.getIntersectNode();
-		s += ", Range: " + this.getIntersectSubRange();
 		s += ", Targets:";
 		for (Node n : this.request.getPossibleTargetNodes())
 			s += n + " ";
+		s += ", Intersect: " + this.request.getIntersectNode();
+		s += ", Range: " + this.getIntersectSubRange();
 		s += ", Insert Path: " + this.subRange.getInsertPath().toStringSimple();
 		s += ", Request Path: "
 				+ this.request.getRequestPath().toStringSimple();

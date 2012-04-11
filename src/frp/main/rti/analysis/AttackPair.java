@@ -1,4 +1,4 @@
-package frp.main.rtiAnalysis;
+package frp.main.rti.analysis;
 
 import java.util.ArrayList;
 import java.util.Hashtable;

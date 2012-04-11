@@ -151,18 +151,31 @@ public class Path implements Comparable<Object> {
 		return this.ranges.get(0).getNode();
 	}
 
-	public boolean equalPath(Path cmp) {
+	private boolean equalPath(Path cmp) {
 		if (cmp == null)
 			return false;
 		if (this.getNodes().size() != cmp.getNodes().size())
 			return false;
 		for (int i = 0; i < this.getNodes().size(); i++) {
-			if (!this.getNodes().get(i).getID()
-					.equals(cmp.getNodes().get(i).getID())) {
+			if (!this.getNodes().get(i).equals(cmp.getNodes().get(i))) {
+				return false;
+			}
+			if (this.ranges.get(i).getTieCount() !=  cmp.ranges.get(i).getTieCount()) {
 				return false;
 			}
 		}
 		return true;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Path))
+			return false;
+
+		Path r = (Path) obj;
+		return this.equalPath(r);
 	}
 
 	@Override

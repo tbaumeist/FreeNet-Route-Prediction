@@ -34,8 +34,25 @@ public class NetworkRouter {
 
 		currentPath.removeLastNode();
 		assert (currentPath.getNodes().isEmpty());
+		
+		// merge adjacent paths together to reduce output
+		this.mergeAdjacent(paths);
 
 		return paths;
+	}
+	
+	private void mergeAdjacent(List<Path> paths){
+		// work from the end back since we may remove entries
+		for(int i = paths.size() - 1; i > 0; i--){
+			Path a = paths.get(i - 1);
+			Path b = paths.get(i);
+			if( a.equals(b) && a.getRange().areAdjacent(b.getRange()) ){
+				// set a range to be the merged range
+				a.setRange(a.getRange().addAdjacentRanges(b.getRange()));
+				// remove b
+				paths.remove(i);
+			}
+		}
 	}
 
 	private boolean _findPaths(List<Path> paths, Path currentPath,

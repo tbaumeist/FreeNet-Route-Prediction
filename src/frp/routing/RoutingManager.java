@@ -1,5 +1,7 @@
 package frp.routing;
 
+import java.io.File;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,8 +42,8 @@ public class RoutingManager {
 	}
 
 	public List<Intersection> calculateNodeIntersections(
-			List<Pair<Double, String>> startNodes, Topology top)
-			throws Exception {
+			List<Pair<Double, String>> startNodes, Topology top,
+			String outputFileName) throws Exception {
 
 		startNodes = checkStartNodes(startNodes, top);
 		List<InsertNodeIntersections> nodeIntersects = new ArrayList<InsertNodeIntersections>();
@@ -50,6 +52,27 @@ public class RoutingManager {
 				top, true);
 		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(startNodes,
 				top, false);
+
+		// save the prediction paths
+		if (outputFileName != null && !outputFileName.isEmpty()) {
+			// output the insert paths
+			File outputInsertFile = new File("insert." + outputFileName);
+			PrintStream insertWriter = new PrintStream(outputInsertFile);
+			for (PathSet[] sArray : pathInsertSets) {
+				for (PathSet s : sArray)
+					insertWriter.println(s);
+			}
+			insertWriter.close();
+			
+			// output the request paths
+			File outputRequestFile = new File("request." + outputFileName);
+			PrintStream requestWriter = new PrintStream(outputRequestFile);
+			for (PathSet[] sArray : pathRequestSets) {
+				for (PathSet s : sArray)
+					requestWriter.println(s);
+			}
+			requestWriter.close();
+		}
 
 		for (Node n : top.getAllNodes()) {
 			nodeIntersects.add(new InsertNodeIntersections(n, pathInsertSets,

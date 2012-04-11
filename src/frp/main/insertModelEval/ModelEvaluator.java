@@ -1,4 +1,4 @@
-package frp.main.predModelEval;
+package frp.main.insertModelEval;
 
 import java.io.File;
 import java.io.PrintStream;
