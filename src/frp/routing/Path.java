@@ -1,5 +1,6 @@
 package frp.routing;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,8 @@ public class Path implements Comparable<Object> {
 	private SubRange range = null;
 	// private double preference = 0;
 	private boolean successful = true;
+
+	private final DecimalFormat decFormat = new DecimalFormat("0.00000");
 
 	public void setSuccess(boolean b) {
 		this.successful = b;
@@ -84,7 +87,7 @@ public class Path implements Comparable<Object> {
 		return getTieCountToNode(null, includeProbStore);
 	}
 
-	public int getTieCountToNode(Node stopNode, boolean includeProbStore) {
+	private int getTieCountToNode(Node stopNode, boolean includeProbStore) {
 		int tie = 0;
 		int size = 0;
 		for (int i = 0; i < this.ranges.size(); i++) {
@@ -103,12 +106,31 @@ public class Path implements Comparable<Object> {
 		return tie - size + 1;
 	}
 	
-	public List<Node> getPathUpToCacheAbleNode(Node stop, int hopReset){
+	/*
+	 * Check if either path is a sub set of the other
+	 */
+	public boolean isPathSubset(Path p, Node stopNode){
+		List<Node> myPath = this.getPathUpToCacheAbleNode(stopNode, -1);
+		List<Node> theirPath = this.getPathUpToCacheAbleNode(stopNode, -1);
+		
+		if(myPath.size() != theirPath.size())
+			return false;
+		
+		for( int i =0; i < myPath.size(); i++){
+			if(!myPath.get(i).equals(theirPath.get(i)))
+				return false;
+		}
+		
+		return true;
+	}
+
+	public List<Node> getPathUpToCacheAbleNode(Node stop, int hopReset) {
 		List<Node> nodes = new ArrayList<Node>();
 		for (int i = 0; i < this.ranges.size(); i++) {
 			SubRange rr = this.ranges.get(i);
 			nodes.add(rr.getNode());
-			if (i > 0 && this.htls.get(i) <= hopReset && rr.getNode().equals(stop))
+			if (i > 0 && this.htls.get(i) <= hopReset
+					&& rr.getNode().equals(stop))
 				break;
 		}
 		return nodes;
@@ -121,13 +143,10 @@ public class Path implements Comparable<Object> {
 			// htl is positive
 			// htl is <= hopReset
 			// it is not the first node in path
-			if (this.htls.get(i) > 0 && i > 0 && this.htls.get(i) <= hopReset) // first
-																				// node
-																				// with
-																				// htl
-																				// of
-																				// 1
+			if (this.htls.get(i) > 0 && i > 0 && this.htls.get(i) <= hopReset)
 				nodes.add(this.ranges.get(i).getNode());
+			// first node with htl of 1
+
 		}
 
 		return nodes;
@@ -160,13 +179,14 @@ public class Path implements Comparable<Object> {
 			if (!this.getNodes().get(i).equals(cmp.getNodes().get(i))) {
 				return false;
 			}
-			if (this.ranges.get(i).getTieCount() !=  cmp.ranges.get(i).getTieCount()) {
+			if (this.ranges.get(i).getTieCount() != cmp.ranges.get(i)
+					.getTieCount()) {
 				return false;
 			}
 		}
 		return true;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null)
@@ -191,45 +211,63 @@ public class Path implements Comparable<Object> {
 
 	@Override
 	public String toString() {
-		String out = "";
+		StringBuilder out = new StringBuilder();
 		if (!getSuccess())
-			out += "FAILED ";
-		out += "| 1/" + getTieCount(false) + " " + 1.0 / getTieCount(false)
-				+ " | ";
-		out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0
-				/ getTieCount(true) + " | ";
-		out += getRange() + " -> ";
-		for (int i = 0; i < this.ranges.size(); i++) {
-			out += this.ranges.get(i).getNode() + "(Tie="
-					+ this.ranges.get(i).getTieCount() + ")(HTL="
-					+ this.htls.get(i) + "), ";
-		}
+			out.append("FAILED ");
 
-		return out;
+		out.append("| 1/");
+		out.append(getTieCount(false));
+		out.append(" ");
+		out.append( this.decFormat.format( 1.0 / getTieCount(false) ));
+		out.append(" | ");
+
+		// out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0
+		// / getTieCount(true) + " | ";
+
+		out.append(getRange());
+		out.append(" -> ");
+
+		out.append(toStringSimpleFillPath());
+
+		return out.toString();
+	}
+	
+	public String toStringSimpleFillPath(){
+		StringBuilder out = new StringBuilder();
+		out.append(toStringSimple());
+		out.append(">>EXTRA>> ");
+		out.append(toStringExtraNodesSimple());
+
+		return out.toString();
 	}
 
 	public String toStringSimple() {
-		String out = "";
+		StringBuilder out = new StringBuilder();
 
 		for (int i = 0; i < this.ranges.size(); i++) {
 			if (this.htls.get(i) <= 0)
 				break;
-			out += "(" + this.htls.get(i) + ")"
-					+ this.ranges.get(i).getNode().getID() + ", ";
+			out.append(this.ranges.get(i).getNode().getID());
+			out.append("(");
+			out.append(this.htls.get(i));
+			out.append("), ");
 		}
 
-		return out;
+		return out.toString();
 	}
 
 	public String toStringExtraNodesSimple() {
-		String out = "";
+		StringBuilder out = new StringBuilder();
 
 		for (int i = 0; i < this.ranges.size(); i++) {
 			if (this.htls.get(i) > 0)
 				continue;
-			out += this.ranges.get(i).getNode().getID() + ", ";
+			out.append(this.ranges.get(i).getNode().getID());
+			out.append("(");
+			out.append(this.htls.get(i));
+			out.append("), ");
 		}
 
-		return out;
+		return out.toString();
 	}
 }

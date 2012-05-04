@@ -8,10 +8,10 @@ public class ListTools {
 			throw new Exception("Not implemented yet!!!!");
 	}
 	
-	public static <T> List<T> intersect(List<T> l, List<T> r){
+	public static <T> List<T> intersect(List<T> request, List<T> insert){
 		List<T> col = new ArrayList<T>();
-		for(T t : l){
-			if(r.contains(t))
+		for(T t : request){
+			if(insert.contains(t))
 				col.add(t);
 		}
 		return col;

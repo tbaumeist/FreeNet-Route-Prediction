@@ -1,5 +1,6 @@
 package frp.routing.itersection;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import frp.routing.Node;
@@ -10,6 +11,8 @@ public class Intersection implements Comparable<Intersection> {
 	private SubRangeIntersections subRange;
 	private RequestNodeIntersections request;
 	private double confidence = 0.0;
+
+	private final DecimalFormat decFormat = new DecimalFormat("0.00000");
 
 	public Intersection(InsertNodeIntersections insert,
 			SubRangeIntersections subRange, RequestNodeIntersections request,
@@ -53,6 +56,24 @@ public class Intersection implements Comparable<Intersection> {
 		return this.confidence;
 	}
 
+	public boolean canMerge(Intersection i) {
+		if (i == null)
+			return false;
+
+		// check if the insert, request, and intersect points match
+		// between I and J
+		// Entries are already grouped together because of processing
+		// order
+		// so the merging can be shortcut
+		if (!this.equals(i)) {
+			return false;
+		}
+
+		return this.request.getRequestPath().isPathSubset(
+				i.request.getRequestPath(),
+				this.getIntersectSubRange().getNode());
+	}
+
 	@Override
 	public int compareTo(Intersection o) {
 		return new Double(this.getConfidence()).compareTo(new Double(o
@@ -60,19 +81,53 @@ public class Intersection implements Comparable<Intersection> {
 	}
 
 	@Override
-	public String toString() {
-		String s = "Confidence: " + this.getConfidence();
-		s += ", Insert: " + this.getInsertStartNode();
-		s += ", Request: " + this.getRequestStartNode();
-		s += ", Targets:";
-		for (Node n : this.request.getPossibleTargetNodes())
-			s += n + " ";
-		s += ", Intersect: " + this.request.getIntersectNode();
-		s += ", Range: " + this.getIntersectSubRange();
-		s += ", Insert Path: " + this.subRange.getInsertPath().toStringSimple();
-		s += ", Request Path: "
-				+ this.request.getRequestPath().toStringSimple();
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Intersection))
+			return false;
+		Intersection i = (Intersection) obj;
 
-		return s;
+		if (!this.getInsertStartNode().equals(i.getInsertStartNode())
+				|| !this.getRequestStartNode().equals(i.getRequestStartNode())
+				|| !this.getIntersectSubRange()
+						.equals(i.getIntersectSubRange())
+				|| !this.request.getIntersectNode().equals(i.request.getIntersectNode())) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append("Confidence: ");
+		s.append(this.decFormat.format(this.getConfidence()));
+
+		s.append(", Insert: ");
+		s.append(this.getInsertStartNode());
+
+		s.append(", Request: ");
+		s.append(this.getRequestStartNode());
+
+		s.append(", Targets:");
+		for (Node n : this.request.getPossibleTargetNodes()) {
+			s.append(n);
+			s.append(" ");
+		}
+
+		s.append(", Intersect: ");
+		s.append(this.request.getIntersectNode());
+
+		s.append(", Range: ");
+		s.append(this.getIntersectSubRange());
+
+		s.append(", Insert Path: ");
+		s.append(this.subRange.getInsertPath().toStringSimpleFillPath());
+
+		s.append(", Request Path: ");
+		s.append(this.request.getRequestPath().toStringSimpleFillPath());
+
+		return s.toString();
 	}
 }

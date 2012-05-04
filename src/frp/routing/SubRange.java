@@ -13,19 +13,21 @@ public class SubRange implements Comparable<Object> {
 	private int tieCount = 0;
 	private boolean isSelfRoute = false;
 
-	public SubRange(Node toNode, double rangeStart, double rangeStop, int tieCount, boolean isSelfRoute){
+	public SubRange(Node toNode, double rangeStart, double rangeStop,
+			int tieCount, boolean isSelfRoute) {
 		this(toNode, rangeStart, rangeStop);
 		this.tieCount = tieCount;
 		this.isSelfRoute = isSelfRoute;
 	}
+
 	public SubRange(Node toNode, double rangeStart, double rangeStop) {
 		this.toNode = toNode;
 		this.rangeStart = DistanceTools.round(rangeStart);
 		this.rangeStop = DistanceTools.round(rangeStop);
 		this.tieCount++;
 	}
-	
-	public boolean isSelfRoute(){
+
+	public boolean isSelfRoute() {
 		return this.isSelfRoute;
 	}
 
@@ -36,8 +38,8 @@ public class SubRange implements Comparable<Object> {
 	public double getStart() {
 		return this.rangeStart;
 	}
-	
-	public int getTieCount(){
+
+	public int getTieCount() {
 		return this.tieCount;
 	}
 
@@ -70,25 +72,25 @@ public class SubRange implements Comparable<Object> {
 
 		return false;
 	}
-	
-	public boolean areAdjacent(SubRange range){
-		if(range == null)
+
+	public boolean areAdjacent(SubRange range) {
+		if (range == null)
 			return false;
-		
-		if(this.getStart() == range.getStop())
+
+		if (this.getStart() == range.getStop())
 			return true;
-		if(this.getStop() == range.getStart())
+		if (this.getStop() == range.getStart())
 			return true;
-		
+
 		return false;
 	}
-	
-	public SubRange addAdjacentRanges(SubRange range){
-		if(this.getStart() == range.getStop())
+
+	public SubRange addAdjacentRanges(SubRange range) {
+		if (this.getStart() == range.getStop())
 			this.rangeStart = range.getStart();
-		if(this.getStop() == range.getStart())
+		if (this.getStop() == range.getStart())
 			this.rangeStop = range.getStop();
-			
+
 		return this;
 	}
 
@@ -111,25 +113,34 @@ public class SubRange implements Comparable<Object> {
 
 		double prev = range.rangeStart;
 		for (double d : edges) {
-			ranges.add(new SubRange(range.getNode(), prev, d, range.tieCount, range.isSelfRoute()));
+			ranges.add(new SubRange(range.getNode(), prev, d, range.tieCount,
+					range.isSelfRoute()));
 			prev = d;
 		}
-		ranges.add(new SubRange(range.getNode(), prev, range.rangeStop, range.tieCount, range.isSelfRoute()));
+		ranges.add(new SubRange(range.getNode(), prev, range.rangeStop,
+				range.tieCount, range.isSelfRoute()));
 
 		return ranges;
 	}
-	
-	public SubRange getIntersection(SubRange rr){
+
+	public SubRange getIntersection(SubRange rr) {
 		double start = Math.max(this.rangeStart, rr.rangeStart);
 		double myStop = wrapsAround() ? this.rangeStop + 1 : this.rangeStop;
 		double thereStop = rr.wrapsAround() ? rr.rangeStop + 1 : rr.rangeStop;
 		double stop = Math.min(myStop, thereStop);
-		return new SubRange(this.toNode, start, stop % 1, this.tieCount, this.isSelfRoute());
+		return new SubRange(this.toNode, start, stop % 1, this.tieCount,
+				this.isSelfRoute());
 	}
 
 	@Override
 	public String toString() {
-		return "[ " + this.rangeStart + ", " + this.rangeStop + " )";
+		StringBuilder s = new StringBuilder();
+		s.append("[ ");
+		s.append(this.rangeStart);
+		s.append(", ");
+		s.append(this.rangeStop);
+		s.append(" )");
+		return s.toString();
 	}
 
 	@Override
@@ -141,6 +152,17 @@ public class SubRange implements Comparable<Object> {
 
 		SubRange r = (SubRange) obj;
 		return new Double(this.rangeStart).compareTo(new Double(r.rangeStart));
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (!(obj instanceof SubRange))
+			return false;
+		SubRange r = (SubRange) obj;
+		
+		return this.rangeStart == r.rangeStart && this.rangeStop == r.rangeStop;
 	}
 
 	private List<Double> edgesOverlap(SubRange r1, SubRange r2) {
@@ -172,4 +194,3 @@ public class SubRange implements Comparable<Object> {
 	}
 
 }
-

@@ -55,17 +55,21 @@ public class RoutingManager {
 
 		// save the prediction paths
 		if (outputFileName != null && !outputFileName.isEmpty()) {
+			File out = new File(outputFileName);
+			String absolutePath = out.getAbsolutePath();
+			String path = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator));
+			
 			// output the insert paths
-			File outputInsertFile = new File("insert." + outputFileName);
+			File outputInsertFile = new File(path + File.separator + "insert." + out.getName());
 			PrintStream insertWriter = new PrintStream(outputInsertFile);
 			for (PathSet[] sArray : pathInsertSets) {
 				for (PathSet s : sArray)
 					insertWriter.println(s);
 			}
 			insertWriter.close();
-			
+
 			// output the request paths
-			File outputRequestFile = new File("request." + outputFileName);
+			File outputRequestFile = new File(path + File.separator + "request." + out.getName());
 			PrintStream requestWriter = new PrintStream(outputRequestFile);
 			for (PathSet[] sArray : pathRequestSets) {
 				for (PathSet s : sArray)
@@ -91,6 +95,26 @@ public class RoutingManager {
 				}
 			}
 		}
+
+		// merge similar intersection points together to reduce output
+		// of duplicate entries
+		for (int i = intersections.size() - 1; i >= 0; i--) {
+			for (int j = i - 1; j >= 0; j--) {
+
+				Intersection iInter = intersections.get(i);
+				Intersection jInter = intersections.get(j);
+				if (iInter == null || jInter == null)
+					continue;
+
+				// Check that j request path is a subset of i request path
+				if (iInter.canMerge(jInter)) {
+					// remove i 
+					intersections.remove(i);
+					break;
+				}
+			}
+		}
+
 		return intersections;
 	}
 

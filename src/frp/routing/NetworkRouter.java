@@ -159,7 +159,8 @@ public class NetworkRouter {
 	}
 
 	private boolean shouldStop(int hopsToLive) {
-		 return hopsToLive <= 0;
+		return hopsToLive <= -1; // go one extra hop
+		 //return hopsToLive <= 0;
 		//return hopsToLive <= -4; // include 4 additional probable storage nodes
 	}
 
