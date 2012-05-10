@@ -18,15 +18,19 @@ import frp.routing.itersection.Intersection;
 import frp.utils.CmdLineTools;
 
 public class RTIPrediction {
+	
+	private static final String DHTL_COUNT = "1";
 
 	private static final int I_TOP = 0;
 	private static final int I_OUT = 1;
 	private static final int I_HTL = 2;
-	private static final int I_HELP = 3;
+	private static final int I_DHTL = 3;
+	private static final int I_HELP = 4;
 	private static final String[][] PROG_ARGS = {
 			{ "-t", "(required) Topology file name." },
 			{ "-o", "(required) Output file name." },
 			{ "-htl", "(required) Max hops to live count." },
+			{"-dhtl", "(optional) Default:1, Specify the number of deterministic hops to live to account for." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	public RTIPrediction() {
@@ -41,15 +45,20 @@ public class RTIPrediction {
 		}
 
 		// / Arguments
-		String outputFileName = CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_OUT), lwArgs);
+		String outputFileName = CmdLineTools.getRequiredArg(CmdLineTools
+				.getName(PROG_ARGS, I_OUT), lwArgs);
 
-		String topologyFileName = CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_TOP), lwArgs);
+		String topologyFileName = CmdLineTools.getRequiredArg(CmdLineTools
+				.getName(PROG_ARGS, I_TOP), lwArgs);
 
 		// Max HTL
-		int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_HTL), lwArgs));
+		int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(CmdLineTools
+				.getName(PROG_ARGS, I_HTL), lwArgs));
+
+		// Deterministic HTL
+		String dhtlString = CmdLineTools.getArg(CmdLineTools.getName(
+				PROG_ARGS, I_DHTL), lwArgs, DHTL_COUNT);
+		int dhtl = Integer.parseInt(dhtlString);
 		// / END: Arguments
 
 		// output stream
@@ -61,7 +70,8 @@ public class RTIPrediction {
 		Topology topology = topReader.readFile();
 
 		// calculate the intersection points
-		List<Intersection> intersections = this.run(topology, maxHTL, outputFileName);
+		List<Intersection> intersections = this.run(topology, maxHTL,
+				outputFileName, dhtl);
 
 		// output all the intersection points
 		Collections.sort(intersections);
@@ -71,12 +81,12 @@ public class RTIPrediction {
 		outputWriter.close();
 	}
 
-	public List<Intersection> run(Topology topology, int maxHTL, String outputFileName)
-			throws Exception {
+	public List<Intersection> run(Topology topology, int maxHTL,
+			String outputFileName, int dhtl) throws Exception {
 
 		// Calculate intersections
 		System.out.println("Calculating intersections ...");
-		RoutingManager manager = new RoutingManager(maxHTL);
+		RoutingManager manager = new RoutingManager(maxHTL, dhtl);
 		List<Intersection> intersections = manager.calculateNodeIntersections(
 				null, topology, outputFileName);
 

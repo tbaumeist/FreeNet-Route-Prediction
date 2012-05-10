@@ -235,8 +235,12 @@ public class Path implements Comparable<Object> {
 	public String toStringSimpleFillPath(){
 		StringBuilder out = new StringBuilder();
 		out.append(toStringSimple());
-		out.append(">>EXTRA>> ");
-		out.append(toStringExtraNodesSimple());
+		
+		String extra = toStringExtraNodesSimple();
+		if(!extra.isEmpty()){
+			out.append(">>EXTRA>> ");
+			out.append(extra);
+		}
 
 		return out.toString();
 	}

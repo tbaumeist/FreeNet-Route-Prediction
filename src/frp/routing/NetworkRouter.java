@@ -5,9 +5,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class NetworkRouter {
+	private int dhtl;
 
-	public NetworkRouter() {
-
+	public NetworkRouter(int dhtl) {
+		this.dhtl = dhtl;
 	}
 
 	public List<Path> findPaths(int resetHTL, int htl, Topology top,
@@ -159,7 +160,7 @@ public class NetworkRouter {
 	}
 
 	private boolean shouldStop(int hopsToLive) {
-		return hopsToLive <= -1; // go one extra hop
+		return hopsToLive <= (-1 * this.dhtl); // go on extra hops
 		 //return hopsToLive <= 0;
 		//return hopsToLive <= -4; // include 4 additional probable storage nodes
 	}

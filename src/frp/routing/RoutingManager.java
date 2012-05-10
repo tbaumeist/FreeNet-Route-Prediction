@@ -16,12 +16,15 @@ public class RoutingManager {
 	private NetworkRouter networkRouter;
 	private int maxHTL, resetHTL;
 
-	private final int insertResetHop = 3;
+	private static final int INSERT_HOP_RESET = 3;
 
-	public RoutingManager(int maxHTL) {
-		this.networkRouter = new NetworkRouter();
+	public RoutingManager(int maxHTL){
+		this(maxHTL, 1);
+	}
+	public RoutingManager(int maxHTL, int dhtl) {
+		this.networkRouter = new NetworkRouter(dhtl);
 		this.maxHTL = maxHTL;
-		this.resetHTL = this.maxHTL - this.insertResetHop;
+		this.resetHTL = this.maxHTL - INSERT_HOP_RESET;
 	}
 
 	public int getResetHTL() {

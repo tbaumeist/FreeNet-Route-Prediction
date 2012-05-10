@@ -43,6 +43,10 @@ public class AttackSizeSet {
 		return s;
 	}
 	
+	public static String getCSVHeader(){
+		return "Subset Size,# Total Nodes,# Min Targets,# Avg Targets,# Max Targets,Min Targets,Max Targets,Runtime (ms)";
+	}
+	
 	public String toStringCSV() {
 		String s = this.subSetSize + "," + this.totalNodeCount;
 		s += "," + this.minTargets.getTargets();
