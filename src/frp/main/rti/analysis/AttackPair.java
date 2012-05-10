@@ -1,37 +1,56 @@
 package frp.main.rti.analysis;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 
 import frp.routing.Node;
+import frp.routing.Topology;
 import frp.routing.itersection.Intersection;
+import frp.utils.ListTools;
 
 public class AttackPair implements Comparable<Object> {
 
-	public static Hashtable<AttackPair, AttackPair> extractAttackPairs(
-			List<Intersection> intersections) {
+	public static List<AttackPair> extractAttackPairs(
+			List<Intersection> intersections, Topology topology) {
 		
+		// Use Hashtable for constructing the list, reduce search time looking for entries
 		Hashtable<AttackPair, AttackPair> pairs = new Hashtable<AttackPair, AttackPair>();
+		
+		// generate all possible pairs of nodes
+		for(Node n1: topology.getAllNodes()){
+			for(Node n2: topology.getAllNodes()){
+				if(n1.equals(n2))
+					continue;
+				AttackPair pair = new AttackPair(n1, n2);
+				if(!pairs.containsKey(pair))
+					pairs.put(pair, pair);
+			}
+		}
 		
 		for(Intersection inter : intersections){
 			AttackPair pair = new AttackPair(inter.getInsertStartNode(), inter.getRequestStartNode());
-			if(!pairs.containsKey(pair))
-				pairs.put(pair, pair);
-			
 			pair = pairs.get(pair);
 			pair.addTargetNodes(inter.getPossibleTargetNodes());
 		}
-		return pairs;
+		
+		// Copy to a list, need ordering now
+		List<AttackPair> allPairs = new ArrayList<AttackPair>();
+		allPairs.addAll(pairs.values());
+		Collections.sort(allPairs);
+
+		return allPairs;
 	}
 
-	private Node insertNode;
-	private Node requestNode;
+	private Node nodeA;
+	private Node nodeB;
 	private List<Node> targetNodes = new ArrayList<Node>();
 
 	public AttackPair(Node i, Node r) {
-		this.insertNode = i;
-		this.requestNode = r;
+		this.nodeA = i;
+		this.nodeB = r;
 	}
 
 	public void addTargetNodes(List<Node> nodes) {
@@ -45,6 +64,25 @@ public class AttackPair implements Comparable<Object> {
 		return this.targetNodes;
 	}
 	
+	public Node getNodeA(){
+		return this.nodeA;
+	}
+	
+	public Node getNodeB(){
+		return this.nodeB;
+	}
+	
+	public void removeTargetNode(Node n){
+		this.targetNodes.remove(n);
+	}
+	
+	public AttackPair minusTargets(List<Node> targets){
+		AttackPair n = new AttackPair(this.nodeA, this.nodeB);
+		n.targetNodes.addAll(this.getTargetNodes());
+		n.targetNodes.removeAll(targets);
+		return n;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null)
@@ -55,12 +93,13 @@ public class AttackPair implements Comparable<Object> {
 		if (!(obj instanceof AttackPair))
 			return false;
 		AttackPair node = (AttackPair) obj;
-		return node.insertNode.equals(this.insertNode) && node.requestNode.equals(this.requestNode);
+		return (node.nodeA.equals(this.nodeA) && node.nodeB.equals(this.nodeB))
+			|| (node.nodeA.equals(this.nodeB) && node.nodeB.equals(this.nodeA));
 	}
 
 	@Override
 	public int hashCode() {
-		return this.insertNode.hashCode() + this.requestNode.hashCode();
+		return this.nodeA.hashCode() + this.nodeB.hashCode();
 	}
 
 	@Override
@@ -70,10 +109,7 @@ public class AttackPair implements Comparable<Object> {
 		if(!(o instanceof AttackPair))
 			return -1;
 		AttackPair i = (AttackPair)o;
-		int cmp = this.insertNode.compareTo(i.insertNode);
-		if(cmp != 0)
-			return cmp;
-		return this.requestNode.compareTo(i.requestNode);
+		return (new Integer(this.getTargetNodes().size()).compareTo(new Integer(i.getTargetNodes().size())) * -1);
 	}
 
 }

@@ -7,91 +7,108 @@ import frp.routing.Node;
 public class AttackSizeSet {
 	private int subSetSize;
 	private int totalNodeCount;
-	private AttackSet maxTargets = null;
-	private AttackSet minTargets = null;
-	private long runningTotal = 0;
-	private long runningCount = 0;
-	private double avgTargets = 0;
+	private List<AttackPair> maxTargets = new ArrayList<AttackPair>();
+	private HashSet<Node> maxTargetNodes = new HashSet<Node>();
+	private HashSet<Node> maxAttackNodes = new HashSet<Node>();
+	private List<AttackPair> minTargets = new ArrayList<AttackPair>();
+	private HashSet<Node> minTargetNodes = new HashSet<Node>();
+	private HashSet<Node> minAttackNodes = new HashSet<Node>();
 	private long runTime = 0;
 
 	public AttackSizeSet(int subSetSize,
-			Hashtable<AttackPair, AttackPair> attackPair, List<Node> allNodes) {
+			List<AttackPair> attackPair, List<Node> allNodes) {
+		if(attackPair.size() <= 0)
+			return;
+		
 		this.subSetSize = subSetSize;
 		this.totalNodeCount = allNodes.size();
 		long t = System.currentTimeMillis();
 
-		tryAllCombinations(attackPair, new ArrayList<Node>(),
-				allNodes, 0, this.subSetSize);
-
-		if (this.minTargets == null)
-			this.minTargets = new AttackSet(null);
-		if (this.maxTargets == null)
-			this.maxTargets = new AttackSet(null);
-		if (this.runningCount > 0)
-			this.avgTargets = ((double) this.runningTotal)
-					/ ((double) this.runningCount);
-
+		calculateTop(attackPair, this.subSetSize - 1);
+		calculateBottom(attackPair, this.subSetSize - 1);
+		
 		this.runTime = System.currentTimeMillis() - t;
+	}
+	
+	private void calculateTop(List<AttackPair> attackPair, int count){
+		if(count <= 0 || attackPair.size() <= 0)
+			return;
+		AttackPair top = attackPair.get(0);
+		if(top.getTargetNodes().size() <= 0)
+			return;
+		this.maxTargets.add(top);
+		
+		this.maxTargetNodes.addAll(top.getTargetNodes());
+		this.maxTargetNodes.add(top.getNodeA());
+		this.maxTargetNodes.add(top.getNodeB());
+		
+		this.maxAttackNodes.add(top.getNodeA());
+		this.maxAttackNodes.add(top.getNodeB());
+		
+		calculateTop(minusTargets(top, attackPair), count - 1);
+	}
+	
+	private void calculateBottom(List<AttackPair> attackPair, int count){
+		if(count <= 0 || attackPair.size() <= 0)
+			return;
+		AttackPair bottom = attackPair.get(attackPair.size() - 1);
+		this.minTargets.add(bottom);
+		
+		this.minTargetNodes.addAll(bottom.getTargetNodes());
+		this.minTargetNodes.add(bottom.getNodeA());
+		this.minTargetNodes.add(bottom.getNodeB());
+		
+		this.minAttackNodes.add(bottom.getNodeA());
+		this.minAttackNodes.add(bottom.getNodeB());
+		calculateBottom(minusTargets(bottom, attackPair), count - 1);
+	}
+	
+	private List<AttackPair> minusTargets(AttackPair remove, List<AttackPair> original){
+		List<AttackPair> minused = new ArrayList<AttackPair>();
+		for(AttackPair n : original){
+			if(n.equals(remove))
+				continue;
+			AttackPair m = n.minusTargets(remove.getTargetNodes());
+			m.removeTargetNode(remove.getNodeA());
+			m.removeTargetNode(remove.getNodeB());
+			minused.add(m);
+		}
+		return minused;
 	}
 
 	@Override
 	public String toString() {
-		String s = "Sub-set: " + this.subSetSize + " Max{ " + this.maxTargets
-				+ "} Avg: " + this.avgTargets;
-		s += " Min{ " + this.minTargets + "}";
-		s += " Run Time: " + this.runTime;
-		return s;
+		return toStringCSV();
 	}
 	
 	public static String getCSVHeader(){
-		return "Subset Size,# Total Nodes,# Min Targets,# Avg Targets,# Max Targets,Min Targets,Max Targets,Runtime (ms)";
+		return "Subset Size,# Total Nodes,# Min Targets,# Max Targets,Min Targets,Max Targets,Runtime (ms)";
 	}
 	
 	public String toStringCSV() {
-		String s = this.subSetSize + "," + this.totalNodeCount;
-		s += "," + this.minTargets.getTargets();
-		s += ","+this.avgTargets + ","+this.maxTargets.getTargets();
-		s += ",Min[" + this.minTargets + "]";
-		s += ",Max[" + this.maxTargets + "]";
-		s += "," + this.runTime;
-		return s;
-	}
-
-	private void tryAllCombinations(
-			Hashtable<AttackPair, AttackPair> attackPair,
-			List<Node> usedNodes, List<Node> allNodes, int start, int count) {
-
-		if (count == 0) {
-			if (usedNodes.isEmpty())
-				return;
-
-			AttackSet attSet = new AttackSet(usedNodes);
-
-			attSet.calcProperties(attackPair);
-			if (this.minTargets == null
-					|| attSet.getTargets() < this.minTargets.getTargets())
-				this.minTargets = attSet;
-			if (this.maxTargets == null
-					|| attSet.getTargets() > this.maxTargets.getTargets())
-				this.maxTargets = attSet;
-			this.runningTotal += attSet.getTargets();
-			this.runningCount++;
-
-			return;
+		StringBuilder b = new StringBuilder();
+		b.append(this.subSetSize);
+		b.append(",");
+		b.append(this.totalNodeCount);
+		b.append(",");
+		b.append(this.minTargetNodes.size());
+		b.append(",");
+		b.append(this.maxTargetNodes.size());
+		b.append(",Min[ ");
+		for(Node n : this.minAttackNodes){
+			b.append(n);
+			b.append(",");
 		}
-
-		if (start >= allNodes.size())
-			return;
-
-		for (int i = start; i < allNodes.size(); i++) {
-			Node n = allNodes.get(i);
-			if (usedNodes.contains(n))
-				continue;
-
-			usedNodes.add(n);
-			tryAllCombinations(attackPair, usedNodes, allNodes, i + 1,
-					count - 1);
-			usedNodes.remove(n);
+		b.deleteCharAt(b.length() - 1);
+		b.append("],Max[ ");
+		for(Node n : this.maxAttackNodes){
+			b.append(n);
+			b.append(",");
 		}
+		b.deleteCharAt(b.length() - 1);
+		b.append("],");
+		b.append(this.runTime);
+
+		return b.toString();
 	}
 }

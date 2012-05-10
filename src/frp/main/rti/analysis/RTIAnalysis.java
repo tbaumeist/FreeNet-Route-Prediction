@@ -98,11 +98,11 @@ public class RTIAnalysis {
 
 			// / start of the interesting part of the code
 			// Calculate the effectiveness for different attack node set sizes
-			Hashtable<AttackPair, AttackPair> attackpairs = AttackPair
-					.extractAttackPairs(intersections);
+			List<AttackPair> attackpairs = AttackPair
+					.extractAttackPairs(intersections, topology);
 
 			outputWriter.println(AttackSizeSet.getCSVHeader());
-			for (int i = 0; i < maxAGS; i++) {
+			for (int i = 0; i <= maxAGS; i++) {
 				System.out.println("Analysing set size " + i + " ...");
 				AttackSizeSet attSet = new AttackSizeSet(i, attackpairs,
 						topology.getAllNodes());
