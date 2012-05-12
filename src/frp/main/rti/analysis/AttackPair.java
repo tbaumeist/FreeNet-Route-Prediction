@@ -1,7 +1,6 @@
 package frp.main.rti.analysis;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.List;
 import frp.routing.Node;
 import frp.routing.Topology;
 import frp.routing.itersection.Intersection;
-import frp.utils.ListTools;
 
 public class AttackPair implements Comparable<Object> {
 

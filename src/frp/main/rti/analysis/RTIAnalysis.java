@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Hashtable;
 import java.util.List;
 
 import frp.dataFileReaders.TopologyFileReader;
@@ -102,12 +101,10 @@ public class RTIAnalysis {
 					.extractAttackPairs(intersections, topology);
 
 			outputWriter.println(AttackSizeSet.getCSVHeader());
-			for (int i = 0; i <= maxAGS; i++) {
-				System.out.println("Analysing set size " + i + " ...");
-				AttackSizeSet attSet = new AttackSizeSet(i, attackpairs,
-						topology.getAllNodes());
-				outputWriter.println(attSet.toStringCSV());
-			}
+			System.out.println("Analysing set size " + maxAGS + " ...");
+			AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackpairs,
+					topology.getAllNodes());
+			outputWriter.println(attSet.toStringCSV());
 
 		} catch (Exception ex) {
 			System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
