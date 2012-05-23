@@ -108,6 +108,10 @@ public class RoutingManager {
 				Intersection jInter = intersections.get(j);
 				if (iInter == null || jInter == null)
 					continue;
+				
+				// Short circuit check
+				if (!iInter.equals(jInter))
+					break;
 
 				// Check that j request path is a subset of i request path
 				if (iInter.canMerge(jInter)) {

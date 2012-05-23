@@ -7,6 +7,7 @@ import frp.routing.Node;
 public class AttackSizeSet {
 	private int subSetSize;
 	private int totalNodeCount;
+	
 	private HashSet<Node> curMaxTargetNodes = new HashSet<Node>();
 	private HashSet<Node> curMaxAttackNodes = new HashSet<Node>();
 	private HashSet<Node> curMinTargetNodes = new HashSet<Node>();
@@ -24,20 +25,36 @@ public class AttackSizeSet {
 		this.attackSets = new AttackSet[this.subSetSize + 1];
 		this.totalNodeCount = allNodes.size();
 
-		this.startTime = System.currentTimeMillis();
-		calculateTop(attackPair, 0);
+		for(int i = 0; i <= this.subSetSize;i++)
+		{
+			System.out.println("RTI analysis for subset " + i);
+			
+			curMaxTargetNodes.clear();
+			curMaxAttackNodes.clear();
+			curMinTargetNodes.clear();
+			curMinAttackNodes.clear();
+			
+			this.startTime = System.currentTimeMillis();
+			
+			calculateTop(attackPair, i , 2);
+			this.attackSets[i] = new AttackSet(i, this.totalNodeCount,
+					System.currentTimeMillis() - this.startTime,
+					this.curMaxTargetNodes, this.curMaxAttackNodes);
 
-		this.startTime = System.currentTimeMillis();
-		calculateBottom(attackPair, 0);
+			
+			calculateBottom(attackPair, i, 2);
+			this.attackSets[i].setMin(System.currentTimeMillis() - this.startTime,
+					this.curMinTargetNodes, this.curMinAttackNodes);
+		}
 	}
 
-	private void calculateTop(List<AttackPair> attackPair, int count) {
-		if (count > this.subSetSize)
+	private void calculateTop(List<AttackPair> attackPair, int subSetSize, int count) {
+		if (count > subSetSize  || this.curMaxAttackNodes.size() >= subSetSize)
 			return;
-		AttackPair top = null;
-		if (count > 1 && attackPair.size() > 0) {
-			top = attackPair.get(0);
-
+		boolean onlyOne = (count == subSetSize && count != 2);
+		AttackPair top = getTopPair(attackPair, onlyOne);
+		
+		if (top != null) {
 			this.curMaxTargetNodes.addAll(top.getTargetNodes());
 			this.curMaxTargetNodes.add(top.getNodeA());
 			this.curMaxTargetNodes.add(top.getNodeB());
@@ -45,21 +62,16 @@ public class AttackSizeSet {
 			this.curMaxAttackNodes.add(top.getNodeA());
 			this.curMaxAttackNodes.add(top.getNodeB());
 		}
-
-		this.attackSets[count] = new AttackSet(count, this.totalNodeCount,
-				System.currentTimeMillis() - this.startTime,
-				this.curMaxTargetNodes, this.curMaxAttackNodes);
-
-		calculateTop(minusTargets(this.curMaxAttackNodes, top, attackPair), count + 1);
+		calculateTop(minusTargets(this.curMaxAttackNodes, top, attackPair), subSetSize, count + 1);
 	}
 
-	private void calculateBottom(List<AttackPair> attackPair, int count) {
-		if (count > this.subSetSize)
+	private void calculateBottom(List<AttackPair> attackPair, int subSetSize, int count) {
+		if (count > subSetSize || this.curMinAttackNodes.size() >= subSetSize)
 			return;
-		AttackPair bottom = null;
-		if (count > 1 && attackPair.size() > 0) {
-			bottom = attackPair.get(attackPair.size() - 1);
-
+		boolean onlyOne = (count == subSetSize && count != 2);
+		AttackPair bottom = getBottomPair(attackPair, onlyOne);
+		
+		if (bottom != null) {
 			this.curMinTargetNodes.addAll(bottom.getTargetNodes());
 			this.curMinTargetNodes.add(bottom.getNodeA());
 			this.curMinTargetNodes.add(bottom.getNodeB());
@@ -67,11 +79,40 @@ public class AttackSizeSet {
 			this.curMinAttackNodes.add(bottom.getNodeA());
 			this.curMinAttackNodes.add(bottom.getNodeB());
 		}
-
-		this.attackSets[count].setMin(System.currentTimeMillis() - this.startTime,
-				this.curMinTargetNodes, this.curMinAttackNodes);
-
-		calculateBottom(minusTargets(this.curMinAttackNodes, bottom, attackPair), count + 1);
+		calculateBottom(minusTargets(this.curMinAttackNodes, bottom, attackPair), subSetSize, count + 1);
+	}
+	
+	private AttackPair getTopPair(List<AttackPair> attackPair, boolean onlyOneNew){
+		if(attackPair == null || attackPair.size() == 0)
+			return null;
+		if(!onlyOneNew)
+			return attackPair.get(0);
+		
+		for(AttackPair p : attackPair){
+			if(this.curMaxAttackNodes.contains(p.getNodeA()))
+				return p;
+			if(this.curMaxAttackNodes.contains(p.getNodeB()))
+				return p;
+		}
+		
+		return null;
+	}
+	
+	private AttackPair getBottomPair(List<AttackPair> attackPair, boolean onlyOneNew){
+		if(attackPair == null || attackPair.size() == 0)
+			return null;
+		if(!onlyOneNew)
+			return attackPair.get(attackPair.size() - 1);
+		
+		for(int i = attackPair.size() - 1; i >= 0; i--){
+			AttackPair p = attackPair.get(i);
+			if(this.curMinAttackNodes.contains(p.getNodeA()))
+				return p;
+			if(this.curMinAttackNodes.contains(p.getNodeB()))
+				return p;
+		}
+		
+		return null;
 	}
 
 	private List<AttackPair> minusTargets(Collection<Node> curAttackNodes, AttackPair remove,
@@ -150,7 +191,7 @@ public class AttackSizeSet {
 	}
 
 	public static String getCSVHeader() {
-		return "Subset Size,# Total Nodes,# Min Targets,# Max Targets,Min Targets,Max Targets,Runtime (ms)";
+		return "Subset Size,# Total Nodes,# Min Targets,# Max Targets,Min Attack Node Set,Max Attack Node Set,Runtime (ms)";
 	}
 
 	public String toStringCSV() {

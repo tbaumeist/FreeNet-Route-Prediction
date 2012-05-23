@@ -101,8 +101,8 @@ public class SubRangeIntersections {
 	private boolean hasTargetNodes(Path insertPath, Path requestPath,
 			List<Node> intersects) {
 		List<Node> nodes = requestPath.getNodes();
-		// need at least 3 nodes in request path
-		if (nodes.size() <= 2)
+		// need at least 2 nodes in request path
+		if (nodes.size() < 2)
 			return false;
 
 		// the second node in request path is not a storage node

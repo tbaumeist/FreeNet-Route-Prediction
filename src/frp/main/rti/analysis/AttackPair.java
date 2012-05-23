@@ -109,5 +109,21 @@ public class AttackPair implements Comparable<Object> {
 		AttackPair i = (AttackPair)o;
 		return (new Integer(this.getTargetNodes().size()).compareTo(new Integer(i.getTargetNodes().size())) * -1);
 	}
+	
+	@Override
+	public String toString(){
+		StringBuilder b = new StringBuilder();
+		
+		b.append(getNodeA());
+		b.append(", ");
+		b.append(getNodeB());
+		b.append(", [ ");
+		for(Node n : getTargetNodes()){
+			b.append(n);
+			b.append(",");
+		}
+		b.append(" ]");
+		return b.toString();
+	}
 
 }

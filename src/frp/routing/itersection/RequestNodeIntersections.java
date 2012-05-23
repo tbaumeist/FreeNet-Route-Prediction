@@ -18,8 +18,11 @@ public class RequestNodeIntersections implements Comparable<Object> {
 		this.intersectionRange = requestPath.getRange().getIntersection(insertPath.getRange());
 		this.intersectNode = intersectNode;
 		for (Node n : requestPath.getNodes()) {
-			if (n.equals(intersectNode))
+			if (n.equals(intersectNode)){
+				// The intersect node can be used in the attack
+				this.possibleTargetNodes.add(n); 
 				break;
+			}
 			if (n.equals(getStartNode()))
 				continue;
 			this.possibleTargetNodes.add(n);
