@@ -2,9 +2,7 @@ package test.frp;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.InputStreamReader;
 
 import frp.dataFileReaders.TopologyFileReader;
 import frp.routing.Topology;
