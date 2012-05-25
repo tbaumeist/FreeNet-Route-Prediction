@@ -50,6 +50,10 @@ public class SubRangeIntersections {
 
 	private void construct(List<PathSet[]> pathRequestSets) {
 
+		//short circuit
+		if(this.dataStorageNodes.isEmpty())
+			return;
+		
 		for (PathSet[] psRequestArray : pathRequestSets) {
 			if (psRequestArray.length < 1)
 				continue;
