@@ -37,7 +37,7 @@ public class RTIAnalysis {
 			{ "-o", "(required) Output file name." },
 			{ "-htl", "(required) Max hops to live count." },
 			{"-dhtl", "(optional) Default:1, Specify the number of deterministic hops to live to account for." },
-			{ "-mags", "(required) Max Attack Group Size." },
+			{ "-mags", "(optional, Default = node count) Max Attack Group Size." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	private RTIAnalysis(String[] args) {
@@ -57,8 +57,8 @@ public class RTIAnalysis {
 					CmdLineTools.getName(PROG_ARGS, I_TOP), lwArgs);
 
 			// Max Attack Group Size
-			int maxAGS = Integer.parseInt(CmdLineTools.getRequiredArg(
-					CmdLineTools.getName(PROG_ARGS, I_MAGS), lwArgs));
+			int maxAGS = Integer.parseInt(CmdLineTools.getArg(
+					CmdLineTools.getName(PROG_ARGS, I_MAGS), lwArgs, "0"));
 
 			// Max HTL
 			int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(
@@ -78,6 +78,10 @@ public class RTIAnalysis {
 			TopologyFileReader topReader = new TopologyFileReader(
 					topologyFileName);
 			Topology topology = topReader.readFile();
+			
+			// Max Attack Group Size
+			if(maxAGS < 1)
+				maxAGS = topology.getAllNodes().size();
 
 			// / Get inputs to the analysis code
 			// Calculate intersections
@@ -86,7 +90,6 @@ public class RTIAnalysis {
 					maxHTL, outputFileName, dhtl);
 
 			// output all the intersection points
-			Collections.sort(intersections);
 			File topXFile = new File(outputFileName + ".intersections");
 			PrintStream topXWriter = new PrintStream(topXFile);
 			for (Intersection i : intersections) {

@@ -48,6 +48,7 @@ public class RoutingManager {
 			List<Pair<Double, String>> startNodes, Topology top,
 			String outputFileName) throws Exception {
 
+		System.out.println("Calculating intersections ...");
 		startNodes = checkStartNodes(startNodes, top);
 		List<InsertNodeIntersections> nodeIntersects = new ArrayList<InsertNodeIntersections>();
 
@@ -101,6 +102,7 @@ public class RoutingManager {
 
 		// merge similar intersection points together to reduce output
 		// of duplicate entries
+		System.out.println("Merging adjacent intersections..");
 		for (int i = intersections.size() - 1; i >= 0; i--) {
 			for (int j = i - 1; j >= 0; j--) {
 

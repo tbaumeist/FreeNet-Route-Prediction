@@ -47,6 +47,14 @@ public class AttackSizeSet {
 					this.curMinTargetNodes, this.curMinAttackNodes);
 		}
 	}
+	
+	public int getMax(int subGroupSize){
+		return this.attackSets[subGroupSize].getMax();
+	}
+	
+	public int getMin(int subGroupSize){
+		return this.attackSets[subGroupSize].getMin();
+	}
 
 	private void calculateTop(List<AttackPair> attackPair, int subSetSize, int count) {
 		if (count > subSetSize  || this.curMaxAttackNodes.size() >= subSetSize)
@@ -228,6 +236,13 @@ public class AttackSizeSet {
 			this.runTime += r;
 			this.minAttackNodes.addAll(minA);
 			this.minTargetNodes.addAll(minN);
+		}
+		
+		public int getMax(){
+			return this.maxAttackNodes.size();
+		}
+		public int getMin(){
+			return this.minAttackNodes.size();
 		}
 
 		@Override

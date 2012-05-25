@@ -90,6 +90,8 @@ public class RTIPrediction {
 		List<Intersection> intersections = manager.calculateNodeIntersections(
 				null, topology, outputFileName);
 
+		Collections.sort(intersections);
+		
 		return intersections;
 	}
 
