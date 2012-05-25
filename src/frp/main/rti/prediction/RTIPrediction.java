@@ -85,7 +85,6 @@ public class RTIPrediction {
 			String outputFileName, int dhtl) throws Exception {
 
 		// Calculate intersections
-		System.out.println("Calculating intersections ...");
 		RoutingManager manager = new RoutingManager(maxHTL, dhtl);
 		List<Intersection> intersections = manager.calculateNodeIntersections(
 				null, topology, outputFileName);

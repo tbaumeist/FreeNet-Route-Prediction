@@ -199,7 +199,7 @@ public class AttackSizeSet {
 	}
 
 	public static String getCSVHeader() {
-		return "Subset Size,# Total Nodes,# Min Targets,# Max Targets,Min Attack Node Set,Max Attack Node Set,Runtime (ms)";
+		return "Subset Size,# Total Nodes,# Min Targets,# Max Targets,Runtime (ms),Min Attack Node Set,Max Attack Node Set";
 	}
 
 	public String toStringCSV() {
@@ -255,7 +255,9 @@ public class AttackSizeSet {
 			b.append(this.minTargetNodes.size());
 			b.append(",");
 			b.append(this.maxTargetNodes.size());
-			b.append(",Min[ ");
+			b.append(",(");
+			b.append(this.runTime);
+			b.append("),Min[ ");
 			for (Node n : this.minAttackNodes) {
 				b.append(n);
 				b.append(",");
@@ -267,8 +269,7 @@ public class AttackSizeSet {
 				b.append(",");
 			}
 			b.deleteCharAt(b.length() - 1);
-			b.append("],");
-			b.append(this.runTime);
+			b.append("]");
 
 			return b.toString();
 		}
