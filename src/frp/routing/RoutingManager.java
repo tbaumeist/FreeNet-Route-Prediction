@@ -64,7 +64,7 @@ public class RoutingManager {
 			String path = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator));
 			
 			// output the insert paths
-			File outputInsertFile = new File(path + File.separator + "insert." + out.getName());
+			File outputInsertFile = new File(path + File.separator + out.getName() + ".insert");
 			PrintStream insertWriter = new PrintStream(outputInsertFile);
 			for (PathSet[] sArray : pathInsertSets) {
 				for (PathSet s : sArray)
@@ -73,7 +73,7 @@ public class RoutingManager {
 			insertWriter.close();
 
 			// output the request paths
-			File outputRequestFile = new File(path + File.separator + "request." + out.getName());
+			File outputRequestFile = new File(path + File.separator + out.getName() + ".request");
 			PrintStream requestWriter = new PrintStream(outputRequestFile);
 			for (PathSet[] sArray : pathRequestSets) {
 				for (PathSet s : sArray)

@@ -103,12 +103,12 @@ public class RTIAnalysis {
 					.extractAttackPairs(intersections, topology);
 			
 			// print out attack pairs
-			File attackPairFile = new File(outputFileName + ".attackPairs");
+			/*File attackPairFile = new File(outputFileName + ".attackPairs");
 			PrintStream attackPairWriter = new PrintStream(attackPairFile);
 			for (AttackPair p : attackpairs) {
 				attackPairWriter.println(p);
 			}
-			attackPairWriter.close();
+			attackPairWriter.close();*/
 
 			outputWriter.println(AttackSizeSet.getCSVHeader());
 			System.out.println("Analysing set size " + maxAGS + " ...");
