@@ -30,13 +30,15 @@ public class RTIAnalysis {
 	private static final int I_HTL = 2;
 	private static final int I_DHTL = 3;
 	private static final int I_MAGS = 4;
-	private static final int I_HELP = 5;
+	private static final int I_EXTRA = 5;
+	private static final int I_HELP = 6;
 	private static final String[][] PROG_ARGS = {
 			{ "-t", "(required) Topology file name." },
 			{ "-o", "(required) Output file name." },
 			{ "-htl", "(required) Max hops to live count." },
 			{"-dhtl", "(optional) Default:1, Specify the number of deterministic hops to live to account for." },
 			{ "-mags", "(optional, Default = node count) Max Attack Group Size." },
+			{ "-extra", "(optional, Default = null) File name for extra debug output files." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	private RTIAnalysis(String[] args) {
@@ -67,6 +69,9 @@ public class RTIAnalysis {
 			String dhtlString = CmdLineTools.getArg(CmdLineTools.getName(
 					PROG_ARGS, I_DHTL), lwArgs, DHTL_COUNT);
 			int dhtl = Integer.parseInt(dhtlString);
+			
+			String extraFileName = CmdLineTools.getArg(
+					CmdLineTools.getName(PROG_ARGS, I_EXTRA), lwArgs, "");
 			// / END: Arguments
 
 			// output stream
@@ -86,15 +91,18 @@ public class RTIAnalysis {
 			// Calculate intersections
 			RTIPrediction rtiPrediction = new RTIPrediction();
 			List<Intersection> intersections = rtiPrediction.run(topology,
-					maxHTL, outputFileName, dhtl);
+					maxHTL, extraFileName, dhtl);
 
 			// output all the intersection points
-			File topXFile = new File(outputFileName + ".intersections");
-			PrintStream topXWriter = new PrintStream(topXFile);
-			for (Intersection i : intersections) {
-				topXWriter.println(i);
+			if(extraFileName != null && !extraFileName.isEmpty())
+			{
+				File topXFile = new File(extraFileName + ".intersections");
+				PrintStream topXWriter = new PrintStream(topXFile);
+				for (Intersection i : intersections) {
+					topXWriter.println(i);
+				}
+				topXWriter.close();
 			}
-			topXWriter.close();
 			// / END: Get inputs to the analysis code
 
 			// / start of the interesting part of the code
