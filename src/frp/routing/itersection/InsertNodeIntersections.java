@@ -8,28 +8,28 @@ public class InsertNodeIntersections {
 	private Node node;
 	private List<SubRangeIntersections> locIntersects = new ArrayList<SubRangeIntersections>();
 
-	public InsertNodeIntersections(Node n, List<PathSet[]> pathInsertSet, List<PathSet[]> pathRequestSets, int hopReset) {
+	public InsertNodeIntersections(Node n) {
 		this.node = n;
+	}
 
-		for( PathSet[] psArr : pathInsertSet ){
-			if(psArr.length < 1)
-				continue;
-			if(!psArr[0].getStartNode().equals(n))
-				continue;
-			for( PathSet ps : psArr){
-				for (Path p : ps.getPaths()) {
-					this.locIntersects.add(new SubRangeIntersections(p, pathRequestSets, hopReset));
-				}
-			}
+	public void calculateIntersection(PathSet pathInsertSet,
+			List<PathSet[]> pathRequestSets, int hopReset) {
+
+		if (!pathInsertSet.getStartNode().equals(this.node))
+			return;
+		for (Path p : pathInsertSet.getPaths()) {
+			this.locIntersects.add(new SubRangeIntersections(p,
+					pathRequestSets, hopReset));
 		}
-		
 	}
 
 	public List<SubRangeIntersections> getSubRangeIntersections() {
 		return this.locIntersects;
 	}
-	
-	public Node getStartNode(){ return this.node;}
+
+	public Node getStartNode() {
+		return this.node;
+	}
 
 	@Override
 	public String toString() {
@@ -42,4 +42,3 @@ public class InsertNodeIntersections {
 		return s;
 	}
 }
-

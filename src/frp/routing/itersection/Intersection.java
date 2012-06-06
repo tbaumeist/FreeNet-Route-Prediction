@@ -1,18 +1,16 @@
 package frp.routing.itersection;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 import frp.routing.Node;
 import frp.routing.SubRange;
+import frp.utils.DistanceTools;
 
 public class Intersection implements Comparable<Intersection> {
 	private InsertNodeIntersections insert;
 	private SubRangeIntersections subRange;
 	private RequestNodeIntersections request;
 	private double confidence = 0.0;
-
-	private final DecimalFormat decFormat = new DecimalFormat("0.00000");
 
 	public Intersection(InsertNodeIntersections insert,
 			SubRangeIntersections subRange, RequestNodeIntersections request,
@@ -102,7 +100,7 @@ public class Intersection implements Comparable<Intersection> {
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		s.append("Confidence: ");
-		s.append(this.decFormat.format(this.getConfidence()));
+		s.append(DistanceTools.round(this.getConfidence()));
 
 		s.append(", Insert: ");
 		s.append(this.getInsertStartNode());

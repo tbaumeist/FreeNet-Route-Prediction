@@ -22,7 +22,7 @@ public class NetworkRouter {
 		List<Path> paths = new ArrayList<Path>();
 		List<Node> visited = new ArrayList<Node>();
 		Path currentPath = new Path();
-		SubRange startRange = new SubRange(start, 0, 0);
+		SubRange startRange = new SubRange(start, new Edge(0), new Edge(0));
 		int resetHop = -1;
 
 		if (isInsertPath) // reset hop only used for inserts
@@ -181,15 +181,5 @@ public class NetworkRouter {
 		Collections.sort(newRanges);
 		return newRanges;
 	}
-
-	// private boolean noDuplicatePaths(List<Path> paths) {
-	// for (int i = 0; i < paths.size() - 1; i++) {
-	// for (int j = i + 1; j < paths.size(); j++) {
-	// if (paths.get(i).getRange().overlaps(paths.get(j).getRange()))
-	// return false;
-	// }
-	// }
-	// return true;
-	// }
 
 }

@@ -1,8 +1,8 @@
 package frp.routing;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import frp.routing.itersection.InsertNodeIntersections;
@@ -10,6 +10,7 @@ import frp.routing.itersection.Intersection;
 import frp.routing.itersection.RequestNodeIntersections;
 import frp.routing.itersection.SubRangeIntersections;
 import frp.utils.Pair;
+import frp.utils.Progresser;
 
 public class RoutingManager {
 
@@ -18,9 +19,14 @@ public class RoutingManager {
 
 	private static final int INSERT_HOP_RESET = 3;
 
-	public RoutingManager(int maxHTL){
+	protected RoutingManager() {
+
+	}
+
+	public RoutingManager(int maxHTL) {
 		this(maxHTL, 1);
 	}
+
 	public RoutingManager(int maxHTL, int dhtl) {
 		this.networkRouter = new NetworkRouter(dhtl);
 		this.maxHTL = maxHTL;
@@ -31,7 +37,7 @@ public class RoutingManager {
 		return this.resetHTL;
 	}
 
-	public List<PathSet[]> calculateRoutesFromNodes(
+	public List<PathSet[]> calculateRoutesFromNodes(Progresser prog,
 			List<Pair<Double, String>> startNodes, Topology top,
 			boolean isInsertPath) throws Exception {
 		List<PathSet[]> pathSets = new ArrayList<PathSet[]>();
@@ -40,6 +46,8 @@ public class RoutingManager {
 		for (Pair<Double, String> startNode : startNodes) {
 			pathSets.add(calculateRoutesFromNode(startNode.getFirst(),
 					startNode.getSecond(), top, isInsertPath));
+			if (prog != null)
+				prog.hit();
 		}
 		return pathSets;
 	}
@@ -48,48 +56,91 @@ public class RoutingManager {
 			List<Pair<Double, String>> startNodes, Topology top,
 			String outputFileName) throws Exception {
 
-		System.out.println("Calculating intersections ...");
+		// //////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////
+		System.out.println("Calculating paths ...");
+
 		startNodes = checkStartNodes(startNodes, top);
-		List<InsertNodeIntersections> nodeIntersects = new ArrayList<InsertNodeIntersections>();
 
-		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(startNodes,
-				top, true);
-		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(startNodes,
-				top, false);
+		Progresser prog = new Progresser(System.out, startNodes.size() * 2);
+		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
+				startNodes, top, true);
 
-		// save the prediction paths
-		if (outputFileName != null && !outputFileName.isEmpty()) {
-			File out = new File(outputFileName);
-			String absolutePath = out.getAbsolutePath();
-			String path = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator));
-			
-			// output the insert paths
-			File outputInsertFile = new File(path + File.separator + out.getName() + ".insert");
-			PrintStream insertWriter = new PrintStream(outputInsertFile);
-			for (PathSet[] sArray : pathInsertSets) {
-				for (PathSet s : sArray)
-					insertWriter.println(s);
+		// save the predicted insert paths
+		File tmpStorage = File.createTempFile("RTI", "Insert");
+		PathSet.savePathSetList(pathInsertSets, tmpStorage.getAbsolutePath());
+		pathInsertSets = null;
+		System.gc();
+
+		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(prog,
+				startNodes, top, false);
+
+		// //////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////
+		List<Intersection> intersections = calculateIntersections(
+				top.getAllNodes(), tmpStorage.getAbsolutePath(),
+				pathRequestSets, this.resetHTL);
+		
+		pathRequestSets = null;
+		System.gc();
+
+		// merge similar intersection points together to reduce output
+		// of duplicate entries
+		System.out.println("Merging adjacent intersections..");
+		Progresser progMerge = new Progresser(System.out, intersections.size());
+		for (int i = intersections.size() - 1; i >= 0; i--) {
+			for (int j = i - 1; j >= 0; j--) {
+
+				Intersection iInter = intersections.get(i);
+				Intersection jInter = intersections.get(j);
+				if (iInter == null || jInter == null)
+					continue;
+
+				// Short circuit check
+				if (!iInter.equals(jInter))
+					break;
+
+				// Check that j request path is a subset of i request path
+				if (iInter.canMerge(jInter)) {
+					// remove i
+					intersections.remove(i);
+					break;
+				}
 			}
-			insertWriter.close();
-
-			// output the request paths
-			File outputRequestFile = new File(path + File.separator + out.getName() + ".request");
-			PrintStream requestWriter = new PrintStream(outputRequestFile);
-			for (PathSet[] sArray : pathRequestSets) {
-				for (PathSet s : sArray)
-					requestWriter.println(s);
-			}
-			requestWriter.close();
+			progMerge.hit();
 		}
 
-		for (Node n : top.getAllNodes()) {
-			nodeIntersects.add(new InsertNodeIntersections(n, pathInsertSets,
-					pathRequestSets, this.resetHTL));
+		return intersections;
+	}
+
+	private List<Intersection> calculateIntersections(List<Node> allNodes,
+			String insertPathSetNameBase, List<PathSet[]> pathRequestSets,
+			int htlReset) throws Exception {
+
+		Hashtable<Node, InsertNodeIntersections> nodeIntersects = new Hashtable<Node, InsertNodeIntersections>();
+
+		System.out.println("Calculating intersections ...");
+		Progresser progInter = new Progresser(System.out, allNodes.size() * this.maxHTL);
+		
+		PathSet.PathSetReader reader = PathSet.createPathSetReader(insertPathSetNameBase);
+		PathSet ps;
+		while((ps = reader.readNext()) != null){
+			
+			// not there so add it
+			if(!nodeIntersects.containsKey(ps.getStartNode())){
+				nodeIntersects.put(ps.getStartNode(), 
+						new InsertNodeIntersections(ps.getStartNode()));
+			}
+			
+			InsertNodeIntersections inter = nodeIntersects.get(ps.getStartNode());
+			inter.calculateIntersection(ps, pathRequestSets, htlReset);
+			
+			progInter.hit();
 		}
 
 		// copy to intersections objects
 		List<Intersection> intersections = new ArrayList<Intersection>();
-		for (InsertNodeIntersections insert : nodeIntersects) {
+		for (InsertNodeIntersections insert : nodeIntersects.values()) {
 			for (SubRangeIntersections subRange : insert
 					.getSubRangeIntersections()) {
 				for (RequestNodeIntersections request : subRange
@@ -100,34 +151,10 @@ public class RoutingManager {
 			}
 		}
 
-		// merge similar intersection points together to reduce output
-		// of duplicate entries
-		System.out.println("Merging adjacent intersections..");
-		for (int i = intersections.size() - 1; i >= 0; i--) {
-			for (int j = i - 1; j >= 0; j--) {
-
-				Intersection iInter = intersections.get(i);
-				Intersection jInter = intersections.get(j);
-				if (iInter == null || jInter == null)
-					continue;
-				
-				// Short circuit check
-				if (!iInter.equals(jInter))
-					break;
-
-				// Check that j request path is a subset of i request path
-				if (iInter.canMerge(jInter)) {
-					// remove i 
-					intersections.remove(i);
-					break;
-				}
-			}
-		}
-
 		return intersections;
 	}
 
-	private List<Pair<Double, String>> checkStartNodes(
+	protected List<Pair<Double, String>> checkStartNodes(
 			List<Pair<Double, String>> startNodes, Topology top) {
 		if (startNodes == null) { // all nodes
 			startNodes = new ArrayList<Pair<Double, String>>();
