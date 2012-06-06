@@ -1,20 +1,19 @@
 package frp.routing;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import frp.utils.CircleList;
+import frp.utils.DistanceTools;
 
 public class Path implements Comparable<Object> {
 
 	private List<SubRange> ranges = new ArrayList<SubRange>();
 	private List<Integer> htls = new ArrayList<Integer>();
 	private SubRange range = null;
-	// private double preference = 0;
 	private boolean successful = true;
-
-	private final DecimalFormat decFormat = new DecimalFormat("0.00000");
+	
+	private final static String DELIMITER = "::";
 
 	public void setSuccess(boolean b) {
 		this.successful = b;
@@ -217,8 +216,8 @@ public class Path implements Comparable<Object> {
 
 		out.append("| 1/");
 		out.append(getTieCount(false));
-		out.append(" ");
-		out.append( this.decFormat.format( 1.0 / getTieCount(false) ));
+		out.append(" | ");
+		out.append( DistanceTools.round( 1.0 / getTieCount(false) ));
 		out.append(" | ");
 
 		// out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0
@@ -230,6 +229,46 @@ public class Path implements Comparable<Object> {
 		out.append(toStringSimpleFillPath());
 
 		return out.toString();
+	}
+	
+	public String serialize(){
+		StringBuilder b = new StringBuilder();
+		b.append(successful);
+		b.append(DELIMITER);
+		b.append(range.serialize());
+		b.append(DELIMITER);
+		
+		for(int i = 0; i < this.ranges.size(); i++){
+			SubRange r = this.ranges.get(i);
+			int htl = this.htls.get(i);
+			
+			b.append(r.serialize());
+			b.append(DELIMITER);
+			b.append(htl);
+			b.append(DELIMITER);
+		}
+		
+		return b.toString();
+	}
+	
+	public static Path deserialize(String s){
+		String[] parts = s.split(DELIMITER);
+		
+		Boolean succ = Boolean.parseBoolean(parts[0]);
+		SubRange r = SubRange.deserialize(parts[1]);
+		
+		Path p = new Path();
+		p.setSuccess(succ);
+		p.setRange(r);
+		
+		for(int i = 2; i < parts.length; i = i + 2){
+			SubRange sr = SubRange.deserialize(parts[i]);
+			int htl = Integer.parseInt(parts[i + 1]);
+			
+			p.addNodeAsRR(sr, htl);
+		}
+		
+		return p;
 	}
 	
 	public String toStringSimpleFillPath(){

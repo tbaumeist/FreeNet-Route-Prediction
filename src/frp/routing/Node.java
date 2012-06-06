@@ -10,6 +10,8 @@ import frp.utils.DistanceTools;
 public class Node extends INode {
 
 	private List<Node> neighbors = new CircleList<Node>();
+	
+	private final static String DELIMITER = "&&";
 
 	public Node(double loc, String id) {
 		this.location = DistanceTools.round(loc);
@@ -102,6 +104,20 @@ public class Node extends INode {
 	public String toString() {
 		return this.getLocation() + " {" + this.id + "}";
 	}
+	
+	public String serialize(){
+		StringBuilder b = new StringBuilder();
+		b.append(this.location);
+		b.append(DELIMITER);
+		b.append(this.id);
+		return b.toString();
+	}
+	
+	public static Node deserialize(String s){
+		String[] parts = s.split(DELIMITER);
+		double loc = Double.parseDouble(parts[0]);
+		return new Node(loc, parts[1]);
+	}
 
 	public List<SubRange> getPathsOut() {
 		List<Node> ignoreNodes = new ArrayList<Node>();
@@ -139,7 +155,8 @@ public class Node extends INode {
 		List<SubRange> rangesList = new CircleList<SubRange>();
 		for (int i = 0; i < allPeers.size(); i++) {
 			rangesList.add(new SubRange(allPeers.get(i).getNode(),
-					allPeers.get(i - 1).getMid(), allPeers.get(i).getMid(),
+					new Edge(allPeers.get(i - 1).getMid()), 
+					new Edge(allPeers.get(i).getMid()),
 					allPeers.get(i).getTieCount(),
 					allPeers.get(i).getNode() == this));
 		}

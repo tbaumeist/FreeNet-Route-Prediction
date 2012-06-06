@@ -3,27 +3,27 @@ package frp.routing;
 import java.util.ArrayList;
 import java.util.List;
 
-import frp.utils.DistanceTools;
-
 public class SubRange implements Comparable<Object> {
 
 	private Node toNode;
-	private double rangeStart, rangeStop;
+	private Edge rangeStart, rangeStop;
 	private boolean isRetry = false;
 	private int tieCount = 0;
 	private boolean isSelfRoute = false;
+	
+	private final static String DELIMITER = "@@";
 
-	public SubRange(Node toNode, double rangeStart, double rangeStop,
+	public SubRange(Node toNode, Edge rangeStart, Edge rangeStop,
 			int tieCount, boolean isSelfRoute) {
 		this(toNode, rangeStart, rangeStop);
 		this.tieCount = tieCount;
 		this.isSelfRoute = isSelfRoute;
 	}
 
-	public SubRange(Node toNode, double rangeStart, double rangeStop) {
+	public SubRange(Node toNode, Edge rangeStart, Edge rangeStop) {
 		this.toNode = toNode;
-		this.rangeStart = DistanceTools.round(rangeStart);
-		this.rangeStop = DistanceTools.round(rangeStop);
+		this.rangeStart = rangeStart;
+		this.rangeStop = rangeStop;
 		this.tieCount++;
 	}
 
@@ -35,8 +35,12 @@ public class SubRange implements Comparable<Object> {
 		return this.toNode;
 	}
 
-	public double getStart() {
+	public Edge getStart() {
 		return this.rangeStart;
+	}
+	
+	public double getStartLocation(){
+		return this.rangeStart.getLocation();
 	}
 
 	public int getTieCount() {
@@ -51,14 +55,18 @@ public class SubRange implements Comparable<Object> {
 		this.isRetry = b;
 	}
 
-	public double getStop() {
+	public Edge getStop() {
 		return this.rangeStop;
+	}
+	
+	public double getStopLocation(){
+		return this.rangeStop.getLocation();
 	}
 
 	public boolean containsPoint(double pt) {
 		if (!wrapsAround())
-			return this.rangeStart <= pt && pt < this.rangeStop;
-		return this.rangeStart <= pt || pt < this.rangeStop;
+			return this.rangeStart.getLocation() <= pt && pt < this.rangeStop.getLocation();
+		return this.rangeStart.getLocation() <= pt || pt < this.rangeStop.getLocation();
 	}
 
 	public boolean overlaps(SubRange range) {
@@ -77,25 +85,25 @@ public class SubRange implements Comparable<Object> {
 		if (range == null)
 			return false;
 
-		if (this.getStart() == range.getStop())
+		if (this.getStart().equals(range.getStop()))
 			return true;
-		if (this.getStop() == range.getStart())
+		if (this.getStop().equals(range.getStart()))
 			return true;
 
 		return false;
 	}
 
 	public SubRange addAdjacentRanges(SubRange range) {
-		if (this.getStart() == range.getStop())
+		if (this.getStart().equals(range.getStop()))
 			this.rangeStart = range.getStart();
-		if (this.getStop() == range.getStart())
+		if (this.getStop().equals(range.getStart()))
 			this.rangeStop = range.getStop();
 
 		return this;
 	}
 
 	public boolean isEntireRange() {
-		return this.rangeStart == this.rangeStop;
+		return this.rangeStart.equals(this.rangeStop);
 	}
 
 	public List<SubRange> splitRangeOverMe(SubRange range) {
@@ -107,12 +115,12 @@ public class SubRange implements Comparable<Object> {
 			return ranges;
 		}
 
-		List<Double> edges = edgesOverlap(this, range);
+		List<Edge> edges = edgesOverlap(this, range);
 		edges.remove(range.rangeStart);
 		edges.remove(range.rangeStop);
 
-		double prev = range.rangeStart;
-		for (double d : edges) {
+		Edge prev = range.rangeStart;
+		for (Edge d : edges) {
 			ranges.add(new SubRange(range.getNode(), prev, d, range.tieCount,
 					range.isSelfRoute()));
 			prev = d;
@@ -124,11 +132,16 @@ public class SubRange implements Comparable<Object> {
 	}
 
 	public SubRange getIntersection(SubRange rr) {
-		double start = Math.max(this.rangeStart, rr.rangeStart);
-		double myStop = wrapsAround() ? this.rangeStop + 1 : this.rangeStop;
-		double thereStop = rr.wrapsAround() ? rr.rangeStop + 1 : rr.rangeStop;
-		double stop = Math.min(myStop, thereStop);
-		return new SubRange(this.toNode, start, stop % 1, this.tieCount,
+		Edge start = (this.getStartLocation() > rr.getStartLocation())? this.rangeStart : rr.rangeStart;
+		Edge stop;
+		if(this.wrapsAround() && !rr.wrapsAround())
+			stop = rr.rangeStop;
+		else if(!this.wrapsAround() && rr.wrapsAround())
+			stop = this.rangeStop;
+		else
+			stop = (this.getStopLocation() < rr.getStopLocation())? this.rangeStop : rr.rangeStop ;
+		
+		return new SubRange(this.toNode, start, stop, this.tieCount,
 				this.isSelfRoute());
 	}
 
@@ -142,6 +155,40 @@ public class SubRange implements Comparable<Object> {
 		s.append(" )");
 		return s.toString();
 	}
+	
+	public String serialize(){
+		StringBuilder b = new StringBuilder();
+		
+		b.append(this.toNode.serialize());
+		b.append(DELIMITER);
+		b.append(this.rangeStart.serialize());
+		b.append(DELIMITER);
+		b.append(this.rangeStop.serialize());
+		b.append(DELIMITER);
+		b.append(this.isRetry);
+		b.append(DELIMITER);
+		b.append(this.tieCount);
+		b.append(DELIMITER);
+		b.append(this.isSelfRoute);
+		b.append(DELIMITER);
+		
+		return b.toString();
+	}
+	
+	public static SubRange deserialize(String s){
+		String[] parts = s.split(DELIMITER);
+		Node n = Node.deserialize(parts[0]);
+		Edge start = Edge.deserialize(parts[1]);
+		Edge stop = Edge.deserialize(parts[2]);
+		Boolean retry = Boolean.parseBoolean(parts[3]);
+		int tie = Integer.parseInt(parts[4]);
+		Boolean selfRoute = Boolean.parseBoolean(parts[5]);
+		
+		SubRange r = new SubRange(n, start, stop, tie, selfRoute);
+		r.setIsRetry(retry);
+		
+		return r;
+	}
 
 	@Override
 	public int compareTo(Object obj) {
@@ -151,7 +198,7 @@ public class SubRange implements Comparable<Object> {
 			return 1;
 
 		SubRange r = (SubRange) obj;
-		return new Double(this.rangeStart).compareTo(new Double(r.rangeStart));
+		return new Double(this.getStartLocation()).compareTo(new Double(r.getStartLocation()));
 	}
 
 	@Override
@@ -162,35 +209,35 @@ public class SubRange implements Comparable<Object> {
 			return false;
 		SubRange r = (SubRange) obj;
 		
-		return this.rangeStart == r.rangeStart && this.rangeStop == r.rangeStop;
+		return this.rangeStart.equals(r.rangeStart) && this.rangeStop.equals(r.rangeStop);
 	}
 
-	private List<Double> edgesOverlap(SubRange r1, SubRange r2) {
-		List<Double> overlaps = new ArrayList<Double>();
+	private List<Edge> edgesOverlap(SubRange r1, SubRange r2) {
+		List<Edge> overlaps = new ArrayList<Edge>();
 		if (r1.wrapsAround() && r2.wrapsAround()) {
-			if (r1.rangeStart >= r2.rangeStart
-					&& r1.rangeStart < r2.rangeStop + 1)
+			if (r1.rangeStart.getLocation() >= r2.rangeStart.getLocation()
+					&& r1.rangeStart.getLocation() < r2.rangeStop.getLocation() + 1)
 				overlaps.add(r1.rangeStart); // r1 front is in r2 ranges
-			if (r1.rangeStop + 1 > r2.rangeStart
-					&& r1.rangeStop <= r2.rangeStop)
+			if (r1.rangeStop.getLocation() + 1 > r2.rangeStart.getLocation()
+					&& r1.rangeStop.getLocation() <= r2.rangeStop.getLocation())
 				overlaps.add(r1.rangeStop); // r1 end is in r2 ranges
 		} else if (r2.wrapsAround()) {
-			if (r1.rangeStart >= r2.rangeStart || r1.rangeStart < r2.rangeStop)
+			if (r1.rangeStart.getLocation() >= r2.rangeStart.getLocation() || r1.rangeStart.getLocation() < r2.rangeStop.getLocation())
 				overlaps.add(r1.rangeStart); // r1 front is in r2 ranges
-			if (r1.rangeStop > r2.rangeStart || r1.rangeStop <= r2.rangeStop)
+			if (r1.rangeStop.getLocation() > r2.rangeStart.getLocation() || r1.rangeStop.getLocation() <= r2.rangeStop.getLocation())
 				overlaps.add(r1.rangeStop); // r1 end is in r2 ranges
 		} else {
 			// normal conditions
-			if (r1.rangeStart >= r2.rangeStart && r1.rangeStart < r2.rangeStop)
+			if (r1.rangeStart.getLocation() >= r2.rangeStart.getLocation() && r1.rangeStart.getLocation() < r2.rangeStop.getLocation())
 				overlaps.add(r1.rangeStart); // r1 front is in r2 ranges
-			if (r1.rangeStop > r2.rangeStart && r1.rangeStop <= r2.rangeStop)
+			if (r1.rangeStop.getLocation() > r2.rangeStart.getLocation() && r1.rangeStop.getLocation() <= r2.rangeStop.getLocation())
 				overlaps.add(r1.rangeStop); // r1 end is in r2 ranges
 		}
 		return overlaps;
 	}
 
 	private boolean wrapsAround() {
-		return this.rangeStart >= this.rangeStop;
+		return this.rangeStart.getLocation() >= this.rangeStop.getLocation();
 	}
 
 }
