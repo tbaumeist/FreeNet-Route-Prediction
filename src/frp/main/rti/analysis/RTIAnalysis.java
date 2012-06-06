@@ -119,7 +119,6 @@ public class RTIAnalysis {
 			attackPairWriter.close();*/
 
 			outputWriter.println(AttackSizeSet.getCSVHeader());
-			System.out.println("Analysing set size " + maxAGS + " ...");
 			AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackpairs,
 					topology.getAllNodes());
 			outputWriter.println(attSet.toStringCSV());

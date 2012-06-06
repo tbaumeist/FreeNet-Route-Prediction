@@ -3,6 +3,7 @@ package frp.main.rti.analysis;
 import java.util.*;
 
 import frp.routing.Node;
+import frp.utils.Progresser;
 
 public class AttackSizeSet {
 	private int subSetSize;
@@ -24,6 +25,9 @@ public class AttackSizeSet {
 		this.subSetSize = subSetSize;
 		this.attackSets = new _AttackSet[this.subSetSize + 1];
 		this.totalNodeCount = allNodes.size();
+		
+		System.out.println("Analysing RTI set size " + this.subSetSize + " ...");
+		Progresser prog = new Progresser(System.out, this.subSetSize * 2);
 
 		curMaxTargetNodes.clear();
 		curMaxAttackNodes.clear();
@@ -31,10 +35,10 @@ public class AttackSizeSet {
 		curMinAttackNodes.clear();
 
 		this.startTime = System.currentTimeMillis();
-		calculateTop(attackPair, 0);
+		calculateTop(prog, attackPair, 0);
 
 		this.startTime = System.currentTimeMillis();
-		calculateBottom(attackPair, 0);
+		calculateBottom(prog, attackPair, 0);
 
 	}
 
@@ -59,12 +63,12 @@ public class AttackSizeSet {
 				this.curMinAttackNodes);
 	}
 
-	private void calculateTop(List<AttackPair> attackPair, int count) {
+	private void calculateTop(Progresser prog, List<AttackPair> attackPair, int count) {
 		
 		if (count > this.subSetSize)
 			return;
 		
-		System.out.println("RTI Top analysis for subset " + count + "...");
+		//System.out.println("RTI Top analysis for subset " + count + "...");
 		Collections.sort(attackPair);
 
 		boolean incCount = false;
@@ -74,6 +78,8 @@ public class AttackSizeSet {
 		if (count < 2) {
 			storeCurrentMax(count);
 			incCount = true;
+			if(prog != null)
+				prog.hit();
 		}
 
 		boolean onlyOne = (count == (this.curMaxAttackNodes.size() + 1));
@@ -97,6 +103,8 @@ public class AttackSizeSet {
 		// attack nodes are ready to be stored
 		if (count > 1 && this.curMaxAttackNodes.size() >= count) {
 			storeCurrentMax(count);
+			if(prog != null)
+				prog.hit();
 			// Remove that last selection
 			this.curMaxAttackNodes = copyCurMaxAttackNodes;
 			this.curMaxTargetNodes = copyCurMaxTargetNodes;
@@ -107,15 +115,15 @@ public class AttackSizeSet {
 		if (incCount)
 			count++;
 
-		calculateTop(minusTargets(this.curMaxAttackNodes, top, attackPair),
+		calculateTop(prog, minusTargets(this.curMaxAttackNodes, top, attackPair),
 				count);
 	}
 
-	private void calculateBottom(List<AttackPair> attackPair, int count) {
+	private void calculateBottom(Progresser prog, List<AttackPair> attackPair, int count) {
 		if (count > this.subSetSize)
 			return;
 		
-		System.out.println("RTI Bottom analysis for subset " + count + "...");
+		//System.out.println("RTI Bottom analysis for subset " + count + "...");
 		Collections.sort(attackPair);
 
 		boolean incCount = false;
@@ -125,6 +133,8 @@ public class AttackSizeSet {
 		if (count < 2) {
 			storeCurrentMin(count);
 			incCount = true;
+			if(prog != null)
+				prog.hit();
 		}
 
 		boolean onlyOne = (count == (this.curMinAttackNodes.size() + 1));
@@ -148,6 +158,8 @@ public class AttackSizeSet {
 		// attack nodes are ready to be stored
 		if (count > 1 && this.curMinAttackNodes.size() >= count) {
 			storeCurrentMin(count);
+			if(prog != null)
+				prog.hit();
 			// Remove that last selection
 			this.curMinAttackNodes = copyCurMinAttackNodes;
 			this.curMinTargetNodes = copyCurMinTargetNodes;
@@ -158,7 +170,7 @@ public class AttackSizeSet {
 		if (incCount)
 			count++;
 
-		calculateBottom(
+		calculateBottom( prog,
 				minusTargets(this.curMinAttackNodes, bottom, attackPair), count);
 	}
 
@@ -316,11 +328,11 @@ public class AttackSizeSet {
 		}
 
 		public int getMax() {
-			return this.maxAttackNodes.size();
+			return this.maxTargetNodes.size();
 		}
 
 		public int getMin() {
-			return this.minAttackNodes.size();
+			return this.minTargetNodes.size();
 		}
 
 		@Override

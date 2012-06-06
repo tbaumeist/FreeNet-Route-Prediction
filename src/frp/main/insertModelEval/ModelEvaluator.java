@@ -119,7 +119,7 @@ public class ModelEvaluator {
 
 		// use insert path only here
 		RoutingManager manager = new RoutingManager(maxHTL);
-		List<PathSet[]> pathSets = manager.calculateRoutesFromNodes(null,
+		List<PathSet[]> pathSets = manager.calculateRoutesFromNodes(null, null,
 				topology, true);
 
 		// full data output file
