@@ -1,10 +1,7 @@
 package frp.utils;
 
-import java.text.DecimalFormat;
 
 public class DistanceTools {
-	private final static String doublePrecision = "#.######";
-	
 	
 	public static double getDistance(double a, double b) {
 		if (a > b)
@@ -20,11 +17,6 @@ public class DistanceTools {
 	}
 	
 	public static double round(double d) {
-		return round(d, doublePrecision);
-	}
-	
-	public static double round(double d, String format) {
-		DecimalFormat twoDForm = new DecimalFormat(format);
-		return Double.valueOf(twoDForm.format(d));
+		return (double)Math.round(d * 100000) / 100000.0;
 	}
 }
