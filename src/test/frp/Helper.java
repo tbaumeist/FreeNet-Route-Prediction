@@ -21,6 +21,20 @@ public class Helper {
 		return topology;
 	}
 	
+	public static Topology load125_10Topology() throws Exception{
+		TopologyFileReader topReader = new TopologyFileReader(
+				getResourcePath() + "topology-125-10.dot");
+		Topology topology = topReader.readFile();
+		return topology;
+	}
+	
+	public static Topology load200_10Topology() throws Exception{
+		TopologyFileReader topReader = new TopologyFileReader(
+				getResourcePath() + "topology-200-10.dot");
+		Topology topology = topReader.readFile();
+		return topology;
+	}
+	
 	public static int possiblePairs(int nodeCount){
 		int n = (nodeCount * nodeCount) - nodeCount;
 		return n / 2;
