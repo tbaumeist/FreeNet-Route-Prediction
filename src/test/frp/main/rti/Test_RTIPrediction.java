@@ -33,8 +33,12 @@ public class Test_RTIPrediction {
 		}
 		interWriter.close();
 
-		assertTrue(Helper.filesAreEqual(Helper.getResourcePath()
-				+ "intersections-50-4-4.dat", interFile.getAbsolutePath()));
+		Boolean filesEqual = Helper.filesAreEqual(Helper.getResourcePath()
+				+ "intersections-50-4-4.dat", interFile.getAbsolutePath());
+		
+		interFile.delete();
+		
+		assertTrue(filesEqual);
 	}
 
 }
