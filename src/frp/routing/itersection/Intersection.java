@@ -74,6 +74,9 @@ public class Intersection implements Comparable<Intersection> {
 
 	@Override
 	public int compareTo(Intersection o) {
+		int cmpNode = this.getInsertStartNode().compareTo(o.getInsertStartNode());
+		if(cmpNode != 0)
+			return cmpNode;
 		return new Double(this.getConfidence()).compareTo(new Double(o
 				.getConfidence())) * -1;
 	}
@@ -127,5 +130,13 @@ public class Intersection implements Comparable<Intersection> {
 		s.append(this.request.getRequestPath().toStringSimpleFillPath());
 
 		return s.toString();
+	}
+	
+	public String serialize(){
+		return null;
+	}
+	
+	public static Intersection deserialize(String s){
+		return null;
 	}
 }

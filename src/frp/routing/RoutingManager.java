@@ -216,11 +216,36 @@ public class RoutingManager {
 						request, this.maxHTL, this.resetHTL));
 			}
 		}
+		
+		mergeAdjacentIntersections(intersections);
 
 		Collections.sort(intersections);
 		
 		for (Intersection i : intersections) {
 			interWriter.println(i);
+		}
+	}
+	
+	private void mergeAdjacentIntersections(List<Intersection> intersections){
+		for (int i = intersections.size() - 1; i >= 0; i--) {
+			for (int j = i - 1; j >= 0; j--) {
+
+				Intersection iInter = intersections.get(i);
+				Intersection jInter = intersections.get(j);
+				if (iInter == null || jInter == null)
+					continue;
+
+				// Short circuit check
+				if (!iInter.equals(jInter))
+					break;
+
+				// Check that j request path is a subset of i request path
+				if (iInter.canMerge(jInter)) {
+					// remove i
+					intersections.remove(i);
+					break;
+				}
+			}
 		}
 	}
 
