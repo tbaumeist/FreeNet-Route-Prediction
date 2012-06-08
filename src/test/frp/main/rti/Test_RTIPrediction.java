@@ -3,14 +3,11 @@ package test.frp.main.rti;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.PrintStream;
-import java.util.List;
 import org.junit.Test;
 
 import test.frp.Helper;
 import frp.main.rti.prediction.RTIPrediction;
 import frp.routing.Topology;
-import frp.routing.itersection.Intersection;
 
 public class Test_RTIPrediction {
 
@@ -19,26 +16,20 @@ public class Test_RTIPrediction {
 		Topology topology = Helper.load50_4Topology();
 		int maxHTL = 4;
 		int dhtl = 0;
-		String outputFileName = null;
+		File tmp = File.createTempFile("intersetions", "test");
+		tmp.delete();
 
 		RTIPrediction rtiPrediction = new RTIPrediction();
-		List<Intersection> intersections = rtiPrediction.run(topology, maxHTL,
-				outputFileName, dhtl);
-
-		// output all the intersection points
-		File interFile = File.createTempFile("50-4-4", ".intersections");
-		PrintStream interWriter = new PrintStream(interFile);
-		for (Intersection i : intersections) {
-			interWriter.println(i);
-		}
-		interWriter.close();
+		rtiPrediction.run(topology, maxHTL, tmp.getAbsolutePath(), dhtl);
+		
+		File cmpFile = new File(tmp.getAbsolutePath()
+				+ RTIPrediction.FILE_INTERSECTIONS_SUFFIX);
 
 		Boolean filesEqual = Helper.filesAreEqual(Helper.getResourcePath()
-				+ "intersections-50-4-4.dat", interFile.getAbsolutePath());
+				+ "intersections-50-4-4.dat", cmpFile.getAbsolutePath());
 		
-		interFile.delete();
-		
+		cmpFile.delete();
+
 		assertTrue(filesEqual);
 	}
-
 }

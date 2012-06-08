@@ -9,7 +9,6 @@ import frp.main.rti.analysis.AttackPair;
 import frp.main.rti.analysis.AttackSizeSet;
 import frp.main.rti.prediction.RTIPrediction;
 import frp.routing.Topology;
-import frp.routing.itersection.Intersection;
 
 import test.frp.Helper;
 
@@ -26,14 +25,10 @@ public class Test_RTIAnalysis {
 		String outputFileName = null;
 		
 		RTIPrediction rtiPrediction = new RTIPrediction();
-		List<Intersection> intersections = rtiPrediction.run(topology,
-				maxHTL, outputFileName, dhtl);
-
-		List<AttackPair> attackpairs = AttackPair
-				.extractAttackPairs(intersections, topology);
+		List<AttackPair> attackPairs = rtiPrediction.run(topology,
+				maxHTL, outputFileName, dhtl);		
 		
-		
-		AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackpairs,
+		AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
 				topology.getAllNodes());
 		assertTrue(attSet != null);
 		assertTrue(true);
@@ -48,16 +43,13 @@ public class Test_RTIAnalysis {
 		String outputFileName = null;
 		
 		RTIPrediction rtiPrediction = new RTIPrediction();
-		List<Intersection> intersections = rtiPrediction.run(topology,
+		List<AttackPair> attackPairs = rtiPrediction.run(topology,
 				maxHTL, outputFileName, dhtl);
-
-		List<AttackPair> attackpairs = AttackPair
-				.extractAttackPairs(intersections, topology);
 		
 		// check all permutations are here
-		assertTrue(attackpairs.size() == Helper.possiblePairs(50));
+		assertTrue(attackPairs.size() == Helper.possiblePairs(50));
 		
-		AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackpairs,
+		AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
 				topology.getAllNodes());
 		
 		// should always be zero
@@ -76,14 +68,10 @@ public class Test_RTIAnalysis {
 		String outputFileName = null;
 		
 		RTIPrediction rtiPrediction = new RTIPrediction();
-		List<Intersection> intersections = rtiPrediction.run(topology,
-				maxHTL, outputFileName, dhtl);
-
-		List<AttackPair> attackpairs = AttackPair
-				.extractAttackPairs(intersections, topology);
+		List<AttackPair> attackPairs = rtiPrediction.run(topology,
+				maxHTL, outputFileName, dhtl);		
 		
-		
-		AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackpairs,
+		AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
 				topology.getAllNodes());
 		
 		/*

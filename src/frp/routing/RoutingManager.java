@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 
+import frp.main.rti.analysis.AttackPair;
+import frp.main.rti.prediction.RTIPrediction;
 import frp.routing.itersection.InsertNodeIntersections;
 import frp.routing.itersection.Intersection;
 import frp.routing.itersection.RequestNodeIntersections;
@@ -53,7 +56,7 @@ public class RoutingManager {
 		return pathSets;
 	}
 
-	public List<Intersection> calculateNodeIntersections(
+	public List<AttackPair> calculateNodeIntersections(
 			List<Pair<Double, String>> startNodes, Topology top,
 			String outputFileName) throws Exception {
 
@@ -84,41 +87,18 @@ public class RoutingManager {
 
 		// //////////////////////////////////////////////////////////
 		// //////////////////////////////////////////////////////////
-		List<Intersection> intersections = calculateIntersections(
-				top.getAllNodes(), tmpStorage.getAbsolutePath(),
-				pathRequestSets, this.resetHTL);
+		String outputInterFileName = null;
+		if(outputFileName != null && !outputFileName.isEmpty())
+			outputInterFileName = outputFileName + RTIPrediction.FILE_INTERSECTIONS_SUFFIX;
+		List<AttackPair> pairs = calculateIntersections(top.getAllNodes(),
+				tmpStorage.getAbsolutePath(), outputInterFileName, pathRequestSets,
+				this.resetHTL);
 
 		PathSet.removeAllSavedPathSetList(tmpStorage.getAbsolutePath());
 		pathRequestSets = null;
 		System.gc();
 
-		// merge similar intersection points together to reduce output
-		// of duplicate entries
-		System.out.println("Merging adjacent intersections..");
-		Progresser progMerge = new Progresser(System.out, intersections.size());
-		for (int i = intersections.size() - 1; i >= 0; i--) {
-			for (int j = i - 1; j >= 0; j--) {
-
-				Intersection iInter = intersections.get(i);
-				Intersection jInter = intersections.get(j);
-				if (iInter == null || jInter == null)
-					continue;
-
-				// Short circuit check
-				if (!iInter.equals(jInter))
-					break;
-
-				// Check that j request path is a subset of i request path
-				if (iInter.canMerge(jInter)) {
-					// remove i
-					intersections.remove(i);
-					break;
-				}
-			}
-			progMerge.hit();
-		}
-
-		return intersections;
+		return pairs;
 	}
 
 	private void savePathPredictions(String fileName, String postFix,
@@ -143,11 +123,12 @@ public class RoutingManager {
 
 	}
 
-	private List<Intersection> calculateIntersections(List<Node> allNodes,
-			String insertPathSetNameBase, List<PathSet[]> pathRequestSets,
-			int htlReset) throws Exception {
+	private List<AttackPair> calculateIntersections(List<Node> allNodes,
+			String insertPathSetNameBase, String outputFileName,
+			List<PathSet[]> pathRequestSets, int htlReset) throws Exception {
 
-		List<Intersection> intersections = new ArrayList<Intersection>();
+		Hashtable<AttackPair, AttackPair> pairs = new Hashtable<AttackPair, AttackPair>();
+		AttackPair.generateAllAttackPairs(pairs, allNodes);
 
 		System.out.println("Calculating intersections ...");
 		Progresser progInter = new Progresser(System.out, allNodes.size()
@@ -156,8 +137,12 @@ public class RoutingManager {
 		PathSet.PathSetReader reader = PathSet
 				.createPathSetReader(insertPathSetNameBase);
 
-		File interStore = File.createTempFile("Intersection", "storage");
-		PrintStream interWriter = new PrintStream(interStore);
+		File interStore = null;
+		PrintStream interWriter = null;
+		if (outputFileName != null && !outputFileName.isEmpty()) {
+			interStore = new File(outputFileName);
+			interWriter = new PrintStream(interStore);
+		}
 
 		Node startNode = null;
 		InsertNodeIntersections currentInter = null;
@@ -168,7 +153,7 @@ public class RoutingManager {
 			if (!ps.getStartNode().equals(startNode)) {
 				startNode = ps.getStartNode();
 				if (currentInter != null)
-					convertToIntersections(intersections, currentInter, interWriter);
+					convertToIntersections(pairs, currentInter, interWriter);
 
 				currentInter = new InsertNodeIntersections(startNode);
 			}
@@ -177,33 +162,28 @@ public class RoutingManager {
 
 			progInter.hit();
 		}
-		
+
 		if (currentInter != null)
-			convertToIntersections(intersections, currentInter, interWriter);
-		
-		interWriter.close();
+			convertToIntersections(pairs, currentInter, interWriter);
 
-		return intersections;
+		if(interWriter != null)
+			interWriter.close();
+
+		// Copy to a list, need ordering now
+		List<AttackPair> allPairs = new ArrayList<AttackPair>();
+		allPairs.addAll(pairs.values());
+		Collections.sort(allPairs);
+
+		return allPairs;
 	}
 
-	private void convertToIntersections(List<Intersection> intersections,
-			InsertNodeIntersections currentInter, PrintStream interWriter) {
-		
-		saveIntersections(interWriter, currentInter);
+	private void convertToIntersections(Hashtable<AttackPair, AttackPair> pairs, InsertNodeIntersections currentInter,
+			PrintStream interWriter) {
 
-		// copy to intersections objects
-		for (SubRangeIntersections subRange : currentInter
-				.getSubRangeIntersections()) {
-			for (RequestNodeIntersections request : subRange
-					.getRequestNodeIntersects()) {
-				intersections.add(new Intersection(currentInter,
-						subRange, request, this.maxHTL,
-						this.resetHTL));
-			}
-		}
+		saveIntersections(pairs, interWriter, currentInter);
 	}
 
-	private void saveIntersections(PrintStream interWriter,
+	private void saveIntersections(Hashtable<AttackPair, AttackPair> pairs, PrintStream interWriter,
 			InsertNodeIntersections currentInter) {
 		// copy to intersections objects
 		List<Intersection> intersections = new ArrayList<Intersection>();
@@ -216,17 +196,28 @@ public class RoutingManager {
 						request, this.maxHTL, this.resetHTL));
 			}
 		}
-		
+
 		mergeAdjacentIntersections(intersections);
 
 		Collections.sort(intersections);
+
+		// write out intersections
+		if (interWriter != null) {
+			for (Intersection i : intersections) {
+				interWriter.println(i);
+			}
+		}
 		
-		for (Intersection i : intersections) {
-			interWriter.println(i);
+		// add to attack pairs
+		for (Intersection inter : intersections) {
+			AttackPair pair = new AttackPair(inter.getInsertStartNode(),
+					inter.getRequestStartNode());
+			pair = pairs.get(pair);
+			pair.addTargetNodes(inter.getPossibleTargetNodes());
 		}
 	}
-	
-	private void mergeAdjacentIntersections(List<Intersection> intersections){
+
+	private void mergeAdjacentIntersections(List<Intersection> intersections) {
 		for (int i = intersections.size() - 1; i >= 0; i--) {
 			for (int j = i - 1; j >= 0; j--) {
 

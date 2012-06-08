@@ -131,12 +131,4 @@ public class Intersection implements Comparable<Intersection> {
 
 		return s.toString();
 	}
-	
-	public String serialize(){
-		return null;
-	}
-	
-	public static Intersection deserialize(String s){
-		return null;
-	}
 }

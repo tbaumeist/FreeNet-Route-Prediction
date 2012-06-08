@@ -19,7 +19,6 @@ import java.util.List;
 import frp.dataFileReaders.TopologyFileReader;
 import frp.main.rti.prediction.RTIPrediction;
 import frp.routing.Topology;
-import frp.routing.itersection.Intersection;
 import frp.utils.CmdLineTools;
 
 public class RTIAnalysis {
@@ -90,36 +89,24 @@ public class RTIAnalysis {
 			// / Get inputs to the analysis code
 			// Calculate intersections
 			RTIPrediction rtiPrediction = new RTIPrediction();
-			List<Intersection> intersections = rtiPrediction.run(topology,
+			List<AttackPair> attackPairs = rtiPrediction.run(topology,
 					maxHTL, extraFileName, dhtl);
-
-			// output all the intersection points
-			if(extraFileName != null && !extraFileName.isEmpty())
-			{
-				File topXFile = new File(extraFileName + ".intersections");
-				PrintStream topXWriter = new PrintStream(topXFile);
-				for (Intersection i : intersections) {
-					topXWriter.println(i);
-				}
-				topXWriter.close();
-			}
 			// / END: Get inputs to the analysis code
 
 			// / start of the interesting part of the code
 			// Calculate the effectiveness for different attack node set sizes
-			List<AttackPair> attackpairs = AttackPair
-					.extractAttackPairs(intersections, topology);
+
 			
 			// print out attack pairs
 			/*File attackPairFile = new File(outputFileName + ".attackPairs");
 			PrintStream attackPairWriter = new PrintStream(attackPairFile);
-			for (AttackPair p : attackpairs) {
+			for (AttackPair p : attackPairs) {
 				attackPairWriter.println(p);
 			}
 			attackPairWriter.close();*/
 
 			outputWriter.println(AttackSizeSet.getCSVHeader());
-			AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackpairs,
+			AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
 					topology.getAllNodes());
 			outputWriter.println(attSet.toStringCSV());
 
