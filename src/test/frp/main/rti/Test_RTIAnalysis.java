@@ -16,12 +16,12 @@ public class Test_RTIAnalysis {
 
 	@Test
 	public void testMemoryUsage() throws Exception {
-		//Topology topology = Helper.load200_10Topology();
-		Topology topology = Helper.load125_10Topology();
+		Topology topology = Helper.load200_10Topology();
+		//Topology topology = Helper.load125_10Topology();
 		
 		int maxHTL = 10;
 		int dhtl = 0;
-		int maxAGS = 0;
+		int maxAGS = topology.getAllNodes().size();
 		String outputFileName = null;
 		
 		RTIPrediction rtiPrediction = new RTIPrediction();
