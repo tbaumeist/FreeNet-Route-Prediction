@@ -352,13 +352,13 @@ public class AttackSizeSet {
 			b.append("),Min[ ");
 			for (Node n : this.minAttackNodes) {
 				b.append(n);
-				b.append(",");
+				b.append(":");
 			}
 			b.deleteCharAt(b.length() - 1);
 			b.append("],Max[ ");
 			for (Node n : this.maxAttackNodes) {
 				b.append(n);
-				b.append(",");
+				b.append(":");
 			}
 			b.deleteCharAt(b.length() - 1);
 			b.append("]");
