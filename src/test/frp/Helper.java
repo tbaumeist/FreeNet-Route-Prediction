@@ -14,23 +14,27 @@ public class Helper {
 		return resourcePath;
 	}
 	
+	public static String getResourcePath(String resource){
+		return getResourcePath() + resource;
+	}
+	
 	public static Topology load50_4Topology() throws Exception{
 		TopologyFileReader topReader = new TopologyFileReader(
-				getResourcePath() + "topology-50-4.dot");
+				getResourcePath("topology-50-4.dot"));
 		Topology topology = topReader.readFile();
 		return topology;
 	}
 	
 	public static Topology load125_10Topology() throws Exception{
 		TopologyFileReader topReader = new TopologyFileReader(
-				getResourcePath() + "topology-125-10.dot");
+				getResourcePath("topology-125-10.dot"));
 		Topology topology = topReader.readFile();
 		return topology;
 	}
 	
 	public static Topology load200_10Topology() throws Exception{
 		TopologyFileReader topReader = new TopologyFileReader(
-				getResourcePath() + "topology-200-10.dot");
+				getResourcePath("topology-200-10.dot"));
 		Topology topology = topReader.readFile();
 		return topology;
 	}

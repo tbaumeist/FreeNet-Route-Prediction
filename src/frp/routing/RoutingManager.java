@@ -103,7 +103,7 @@ public class RoutingManager {
 
 	private void savePathPredictions(String fileName, String postFix,
 			List<PathSet[]> pathSets) throws Exception {
-		if (fileName == null || !fileName.isEmpty())
+		if (fileName == null || fileName.isEmpty())
 			return;
 
 		File out = new File(fileName);
