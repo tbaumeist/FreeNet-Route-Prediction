@@ -6,7 +6,7 @@ import java.io.File;
 
 import org.junit.Test;
 
-import frp.gephi.rti.AttackNodeAnalysis;
+import frp.gephi.rti.AttackNodeAnalysisMulti;
 
 import test.frp.Helper;
 
@@ -22,7 +22,7 @@ public class Test_AttackNodeAnalysis {
 			File file = File.createTempFile("ANA", ".csv");
 			String outFileName = file.getAbsolutePath();
 
-			AttackNodeAnalysis ana = new AttackNodeAnalysis();
+			AttackNodeAnalysisMulti ana = new AttackNodeAnalysisMulti();
 			ana.run(topDirName, datFileName, outFileName);
 
 			assertTrue(file.delete());
