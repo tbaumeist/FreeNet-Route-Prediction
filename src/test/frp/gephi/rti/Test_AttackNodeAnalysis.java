@@ -7,6 +7,7 @@ import java.io.File;
 import org.junit.Test;
 
 import frp.gephi.rti.AttackNodeAnalysisMulti;
+import frp.gephi.rti.AttackNodeAnalysisSingle;
 
 import test.frp.Helper;
 
@@ -23,7 +24,7 @@ public class Test_AttackNodeAnalysis {
 			String outFileName = file.getAbsolutePath();
 
 			AttackNodeAnalysisMulti ana = new AttackNodeAnalysisMulti();
-			ana.run(topDirName, datFileName, outFileName);
+			ana.run(topDirName, datFileName, outFileName, AttackNodeAnalysisSingle.MAX_HTL_COLUMNS);
 
 			assertTrue(file.delete());
 		} catch (Exception ex) {

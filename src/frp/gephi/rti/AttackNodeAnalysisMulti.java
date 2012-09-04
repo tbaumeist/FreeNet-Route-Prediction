@@ -13,11 +13,13 @@ public class AttackNodeAnalysisMulti {
 	private static final int I_TOP = 0;
 	private static final int I_DAT = 1;
 	private static final int I_OUT = 2;
-	private static final int I_HELP = 3;
+	private static final int I_MAX_HTL = 3;
+	private static final int I_HELP = 4;
 	private static final String[][] PROG_ARGS = {
 			{ "-tDir", "(required) Topology files directory name." },
 			{ "-d", "(required) RTI analysis file name." },
 			{ "-o", "(required) Output file name." },
+			{ "-maxhtl", "(optional default 10) Maximum possible htl." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	private final int iNodeCount = 0;
@@ -55,8 +57,12 @@ public class AttackNodeAnalysisMulti {
 
 			String dataFileName = CmdLineTools.getRequiredArg(CmdLineTools
 					.getName(PROG_ARGS, I_DAT), lwArgs);
+			
+			String maxHTLStr = CmdLineTools.getArg(CmdLineTools
+					.getName(PROG_ARGS, I_MAX_HTL), lwArgs, AttackNodeAnalysisSingle.MAX_HTL_COLUMNS +"");
+			int maxHTL = Integer.parseInt(maxHTLStr);
 
-			this.run(topologyFileName, dataFileName, outputFileName);
+			this.run(topologyFileName, dataFileName, outputFileName,maxHTL);
 
 		} catch (Exception ex) {
 			System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
@@ -67,9 +73,9 @@ public class AttackNodeAnalysisMulti {
 	}
 
 	public void run(String topologyDirName, String attackAnalysisFile,
-			String outputFileName) throws Exception {
+			String outputFileName, int maxHTL) throws Exception {
 
-		AttackNodeAnalysisSingle single = new AttackNodeAnalysisSingle();
+		AttackNodeAnalysisSingle single = new AttackNodeAnalysisSingle(maxHTL);
 
 		PrintStream outputWriter = new PrintStream(new File(outputFileName));
 		outputWriter.print(single.printCSVGraphHeader());
@@ -93,19 +99,20 @@ public class AttackNodeAnalysisMulti {
 			String nodeCountStr = reader.getColumn(this.iNodeCount);
 			String peerCountStr = reader.getColumn(this.iPeerCount);
 			String htlStr = reader.getColumn(this.iHTL);
+			int htl = Integer.parseInt(htlStr);
 
-			single = new AttackNodeAnalysisSingle(topFile);
+			single = new AttackNodeAnalysisSingle(maxHTL, topFile);
 			
 			outputWriter.print(single.calcGraphStats(nodeCountStr,
-					peerCountStr, htlStr, dataSetCount + ""));
+					peerCountStr, htl, dataSetCount + ""));
 
 			String nodeEntryMin = reader.getColumn(this.iMinAttackNodes);
 			String targetCountMin = reader.getColumn(this.iMinTargetCount);
-			outputWriter.print(single.calcSinglePairStats(nodeEntryMin, htlStr, targetCountMin));
+			outputWriter.print(single.calcSinglePairStats(nodeEntryMin, htl, targetCountMin));
 
 			String nodeEntryMax = reader.getColumn(this.iMaxAttackNodes);
 			String targetCountMax = reader.getColumn(this.iMaxTargetCount);
-			outputWriter.print(single.calcSinglePairStats(nodeEntryMax, htlStr, targetCountMax));
+			outputWriter.print(single.calcSinglePairStats(nodeEntryMax, htl, targetCountMax));
 
 			outputWriter.println();
 			dataSetCount++;

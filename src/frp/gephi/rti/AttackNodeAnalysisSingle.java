@@ -34,7 +34,8 @@ public class AttackNodeAnalysisSingle {
 	private static final int I_DATASET = 4;
 	private static final int I_APP = 5;
 	private static final int I_OUT = 6;
-	private static final int I_HELP = 7;
+	private static final int I_MAX_HTL = 7;
+	private static final int I_HELP = 8;
 	private static final String[][] PROG_ARGS = {
 			{ "-t", "(required) Topology file name." },
 			{ "-n", "(required) Total node count." },
@@ -43,10 +44,14 @@ public class AttackNodeAnalysisSingle {
 			{ "-ds", "(required) Data Set count." },
 			{ "-a", "(optional default = false) Append to output file." },
 			{ "-o", "(required) Output file name." },
+			{ "-maxhtl", "(optional default 10) Maximum possible htl." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	private GephiHelper gHelper;
 	private DirectedGraph graph;
+	private int totalReachFields = 0;
+	
+	public static final int MAX_HTL_COLUMNS = 10;
 
 	public static void main(String[] args) {
 		try {
@@ -74,14 +79,18 @@ public class AttackNodeAnalysisSingle {
 			String peerCount = CmdLineTools.getRequiredArg(CmdLineTools
 					.getName(PROG_ARGS, I_PEER), lwArgs);
 
-			String htl = CmdLineTools.getRequiredArg(CmdLineTools.getName(
+			String htlStr = CmdLineTools.getRequiredArg(CmdLineTools.getName(
 					PROG_ARGS, I_HTL), lwArgs);
+			int htl = Integer.parseInt(htlStr);
+			
+			String maxHTLStr = CmdLineTools.getArg(CmdLineTools
+					.getName(PROG_ARGS, I_MAX_HTL), lwArgs, AttackNodeAnalysisSingle.MAX_HTL_COLUMNS +"");
+			int maxHTL = Integer.parseInt(maxHTLStr);
 
 			String dataSetCount = CmdLineTools.getRequiredArg(CmdLineTools
 					.getName(PROG_ARGS, I_DATASET), lwArgs);
 
-			AttackNodeAnalysisSingle s = new AttackNodeAnalysisSingle(
-					topologyFileName);
+			AttackNodeAnalysisSingle s = new AttackNodeAnalysisSingle(maxHTL, topologyFileName);
 
 			PrintStream outputWriter = new PrintStream(new FileOutputStream(
 					new File(outputFileName), append));
@@ -100,23 +109,32 @@ public class AttackNodeAnalysisSingle {
 
 	}
 
-	public AttackNodeAnalysisSingle(String topFileName) throws Exception {
-		this();
+	public AttackNodeAnalysisSingle(int totalHTLColumns, String topFileName) throws Exception {
+		this(totalHTLColumns);
 		this.graph = this.gHelper.loadGraphFile(topFileName);
+	}
+
+	public AttackNodeAnalysisSingle(int totalHTLColumns) {
+		this.gHelper = new GephiHelper();
+		this.totalReachFields = totalHTLColumns;
 	}
 	
 	public AttackNodeAnalysisSingle() {
-		this.gHelper = new GephiHelper();
+		this(MAX_HTL_COLUMNS);
 	}
 
 	public String printCSVGraphHeader() {
 		StringBuilder b = new StringBuilder();
 		b.append("Node Count,Peer Count,HTL,Set #");
 		b.append(",Clustering Coefficient,Network Diameter,Avg Path Length");
-		b
-				.append(",Theoretical Node Reach,Theoretical Node Reach w/ Clustering");
+		// b.append(",Theoretical Node Reach,Theoretical Node Reach w/ Clustering(T /w C)");
+		for (int i = 1; i <= this.totalReachFields; i++)
+			b.append(",(Theo Node Reach /w CC) hop " + i);
+		// b.append(",Theoretical Node Reach w/ Clustering Method 2");
+		for (int i = 1; i <= this.totalReachFields; i++)
+			b.append(",Actual Node Reach Avg hop " + i);
 		b.append(",Actual Node Reach Min,Actual Node Reach Max");
-		b.append(",Actual Node Reach Avg,Actual Node Reach Median");
+		b.append(",Actual Node Reach Median");
 		return b.toString();
 	}
 
@@ -128,8 +146,8 @@ public class AttackNodeAnalysisSingle {
 		return b.toString();
 	}
 
-	public String calcGraphStats(String nodeCount, String peerCount,
-			String htl, String dataSetCount) throws Exception {
+	public String calcGraphStats(String nodeCount, String peerCount, int htl,
+			String dataSetCount) throws Exception {
 
 		StringBuilder b = new StringBuilder();
 
@@ -153,40 +171,59 @@ public class AttackNodeAnalysisSingle {
 		b.append(distance.getPathLength() + 1 + ",");
 
 		// theoretical node reach
-		b.append(this.calcTheoreticalReach(htl, peerCount, 0) + ",");
-		b.append(this.calcTheoreticalReach(htl, peerCount, cCoeff
-				.getAverageClusteringCoefficient())
-				+ ",");
+		double[] theoReach = this.calcTheoreticalReach(htl, peerCount, cCoeff
+				.getAverageClusteringCoefficient());
+		for (int i = 0; i < this.totalReachFields; i++) {
+			if(i < theoReach.length)
+				b.append(theoReach[i]);
+			b.append(",");
+		}
+
+		// b.append(this.calcTheoreticalReach2(htl, peerCount, cCoeff
+		// .getAverageClusteringCoefficient())
+		// + ",");
 
 		// actual node reach
-		Integer[] reaches = new Integer[graph.getNodeCount()];
+		int[][] reaches = new int[graph.getNodeCount()][htl];
 		Iterator<Node> iter = graph.getNodes().iterator();
-		int total = 0;
 		int count = 0;
 		while (iter.hasNext()) {
 			Node n = iter.next();
 			reaches[count] = this.calcActualReach(graph, n.toString(), htl);
-			total += reaches[count];
 			count++;
 		}
+		
+		// Process each column
+		Integer[] column = null;
+		for( int i = 0; i < this.totalReachFields; i++){
+			if(i < htl){
+				column = new Integer[reaches.length];
+				int total = 0;
+				for(int j =0; j < reaches.length; j++){
+					column[j] = reaches[j][i];
+					total += column[j];
+				}
+				b.append((double) total / (double) reaches.length);
+			}
+			b.append(",");
+		}
 
-		Arrays.sort(reaches);
-		b.append(reaches[0] + ",");
-		b.append(reaches[reaches.length - 1] + ",");
-		b.append((double) total / (double) count + ",");
+		Arrays.sort(column);
+		b.append(column[0] + ",");
+		b.append(column[column.length - 1] + ",");
 
 		double median;
-		int mid = reaches.length / 2;
-		if (reaches.length % 2 == 1)
-			median = reaches[mid];
+		int mid = column.length / 2;
+		if (column.length % 2 == 1)
+			median = column[mid];
 		else
-			median = (reaches[mid] + reaches[mid - 1]) / 2.0;
+			median = (column[mid] + column[mid - 1]) / 2.0;
 		b.append(median);
 
 		return b.toString();
 	}
 
-	public String calcSinglePairStats(String nodeTextEntry, String htl,
+	public String calcSinglePairStats(String nodeTextEntry, int htl,
 			String targetCount) throws Exception {
 		StringBuilder b = new StringBuilder();
 
@@ -198,8 +235,11 @@ public class AttackNodeAnalysisSingle {
 		b.append(targetCount + ",");
 		b.append(p.getDifference() + ",");
 
-		b.append(this.calcActualReach(graph, p.getA(), htl) + ",");
-		b.append(this.calcActualReach(graph, p.getB(), htl));
+		int[] reach = this.calcActualReach(graph, p.getA(), htl);
+		b.append(reach[reach.length-1] + ",");
+		
+		reach = this.calcActualReach(graph, p.getB(), htl);
+		b.append(reach[reach.length-1]);
 
 		return b.toString();
 	}
@@ -238,27 +278,46 @@ public class AttackNodeAnalysisSingle {
 		return 0;
 	}
 
-	private double calcTheoreticalReach(String htl, String peerCount,
+	private double[] calcTheoreticalReach(int htl, String peerCount,
 			double clusterCoeff) {
-		int h = Integer.parseInt(htl);
+		double[] values = new double[htl];
 		int pCount = Integer.parseInt(peerCount);
 		int k = pCount - 1;
 		double cc = (1 - clusterCoeff);
-		double reach = ((((Math.pow(k * cc, h - 1) - 1) / ((k * cc) - 1)) * (k + 1)) + 1);
-		return reach;
+		for (int i = 1; i <= htl; i++)
+			values[i-1] = ((((Math.pow(k * cc, i - 1) - 1) / ((k * cc) - 1)) * ((k + 1))) + 1);
+		return values;
 	}
 
-	private int calcActualReach(DirectedGraph graph, String nodeName, String htl) {
+	// private double calcTheoreticalReach2(String htl, String peerCount,
+	// double clusterCoeff) {
+
+	// int h = Integer.parseInt(htl);
+	// int pCount = Integer.parseInt(peerCount);
+	// double cc = (1 - clusterCoeff);
+	// return calcTheoreticalReach2(h-1, pCount - 1, cc) * pCount +1;
+	// }
+
+	//private double calcTheoreticalReach2(int htl, int k, double cc) {
+	//	if (htl == 0)
+	//		return 1;
+	//	return Math.pow(k * Math.pow(cc, htl), htl)
+	//			+ calcTheoreticalReach2(htl - 1, k, cc);
+	//}
+
+	private int[] calcActualReach(DirectedGraph graph, String nodeName, int htl) {
 
 		Node node = graph.getNode(nodeName);
-		int h = Integer.parseInt(htl);
 		List<Node> visited = new ArrayList<Node>();
 		List<Node> active = new ArrayList<Node>();
+		
+		int[] reach = new int[htl];
 
 		active.add(node);
 		visited.add(node);
+		reach[0] = visited.size();
 
-		for (int i = 0; i < h - 1; i++) {
+		for (int i = 1; i < htl; i++) {
 			List<Node> neighbors = new ArrayList<Node>();
 			for (Node n : active) {
 				for (Node n1 : graph.getNeighbors(n)) {
@@ -269,9 +328,10 @@ public class AttackNodeAnalysisSingle {
 				}
 			}
 			active = neighbors;
+			reach[i] = visited.size();
 		}
 
-		return visited.size();
+		return reach;
 	}
 
 	private NodePair parseTwoNodes(String text) {
