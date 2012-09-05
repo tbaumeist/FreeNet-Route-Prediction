@@ -3,128 +3,71 @@ package frp.main.insertModelEval;
 import java.io.PrintStream;
 import java.util.List;
 
+import frp.routing.Node;
 import frp.routing.Path;
 import frp.routing.PathSet;
 import frp.routing.Topology;
 
 public class PathComparer {
-	private int total = 0;
-	private int storageLocationActual = 0;
-	private int storageLocationActualPart = 0;
-	private double totalStorageNodes = 0;
 
-	public void compareStorageNodes(PrintStream writer, PrintStream fullData,
-			Topology topology, List<StoredWordData> theData,
-			List<PathSet[]> pathSets, CommLog log, int hopReset, int maxHTL) {
+	public void writerHeader(PrintStream s) {
+		s.println("Node Count,Peer Count,HTL,Word,Word Location,Origin Node,Model Accuracy,Model Confidence,Model Path,Actual Path");
+	}
 
-		int[][] perHopStats = new int[maxHTL][3];
-		printFullDataHeader(fullData);
+	public String compareStorageNodes(Topology topology,
+			int hopReset, int maxHTL, List<PathSet[]> pathSets,
+			ActualRoutePath actPath) {
 
-		for (StoredWordData data : theData) {
-			try {
-				PathSet ps = PathSet.findPathSet(data.getOriginNode(),
-						data.getHtl(), pathSets);
-				if (ps == null)
-					continue;
-
-				List<Path> paths = ps.findPaths(Double.parseDouble(data
-						.getLocation()));
-				int foundCnt = 0;
-				int foundPartCnt = 0;
-				double guessConvidence = 0.0;
-				double guessExtraConvidence = 0.0;
-				String storageNodes = "";
-				for (Path p : paths) {
-					guessConvidence += p.getPathConfidence()
-							/ (double) paths.size();
-					guessExtraConvidence += p.getPathConfidenceWithProbStoreNodes()
-							/ (double) paths.size();
-
-					for(String s : p.getProbableStoreNodeIds(hopReset)){
-						storageNodes += s + " ";
-					}
-
-					this.total++;
-					if (data.getActualStorageNodes().containsAll(
-							p.getProbableStoreNodeIds(hopReset))) {
-						this.storageLocationActual++;
-						foundCnt++;
-					}
-					// check partially correct
-					for(String s : data.getActualStorageNodes()){
-						if(p.getProbableStoreNodeIds(hopReset).contains(s)){
-							foundPartCnt++;
-						}
-					}
-					if(foundPartCnt> 0)
-						this.storageLocationActualPart++;
-					
-					// store per htl stats
-					perHopStats[data.getHtl()-1][0]++;
-					if(foundCnt > 0)
-						perHopStats[data.getHtl()-1][1]++;
-					if(foundPartCnt > 0)
-						perHopStats[data.getHtl()-1][2]++;
-					
-					// should only ever be one path per inserted data
-					printFullData(fullData, foundCnt>0, foundPartCnt, data, guessConvidence, guessExtraConvidence,
-							storageNodes, p.toStringSimple(), p.toStringExtraNodesSimple(), log);
-				}
-				this.totalStorageNodes += data.getActualStorageNodes().size();
-
-			} catch (Exception e) {
-
-			}
-		}
-		writer.println("Total inserts: " + this.total);
-		writer.println("Total correct predictions: "
-				+ this.storageLocationActual + " "
-				+ ((double) this.storageLocationActual / (double) this.total)
-				* 100.0 + "%");
-		writer.println("Total partially correct predictions: "
-				+ this.storageLocationActualPart + " "
-				+ ((double) this.storageLocationActualPart / (double) this.total)
-				* 100.0 + "%");
-		writer.println("Average # actual storage nodes per node: "
-				+ ((double) this.totalStorageNodes / (double) this.total));
-		writer.println("Per HTL Stats");
+		StringBuilder b = new StringBuilder();
 		
-		for(int i =0; i < perHopStats.length; i++){
-			if(i == 0)
-				continue;
-			writer.println((i+1)+","+perHopStats[i][0] + ","+perHopStats[i][1]+ ","+perHopStats[i][2]);
+		PathSet ps = PathSet.findPathSet(actPath.getOriginNode(), actPath
+				.getHTL(), pathSets);
+
+		if (ps == null){
+			return "Error Processing Entry";
 		}
+		
+		Path path = ps.findPaths(actPath.getWordLocation()).get(0);
+		
+		int index =0;
+		for( Node n : path.getNodes()){
+		
+			if( index >= actPath.getPath().size())
+				break;
+			
+			String realNode = actPath.getPath().get(index);
+			if(!n.getID().equals(realNode))
+				break;
+			
+			index++;
+		}
+		
+		int length = Math.max(actPath.getPath().size(), path.getNodes().size());
+		double accuracy = index / (double)length;
+		
+		
+		b.append(actPath.getNodeCount());
+		b.append(",");
+		b.append(actPath.getPeerCount());
+		b.append(",");
+		b.append(actPath.getHTL());
+		b.append(",");
+		b.append(actPath.getWord());
+		b.append(",");
+		b.append(actPath.getWordLocation());
+		b.append(",");
+		b.append(actPath.getOriginNode());
+		b.append(",");
+		b.append(accuracy);
+		b.append(",");
+		b.append(path.getPathConfidence());
+		b.append(",");
+		for(Node n : path.getNodes())
+			b.append(n.getID() + "|");
+		b.append(",");
+		for(String s : actPath.getPath())
+			b.append(s + "|");
+		
+		return b.toString();
 	}
-
-	private void printFullDataHeader(PrintStream writer) {
-		writer.println("Word, Key, Location, Insert Node, Guessed Storage Nodes, Confidence, Confidence w/ extra nodes, Hit, Partial Hit Count, Actual Storage Nodes, Actual Storage Node Count, HTL, Guessed Path, Extra Guessed Nodes, Actual Paths, Seen Reject");
-	}
-
-	private void printFullData(PrintStream writer, boolean fullHit, int foundPartCnt,
-			StoredWordData data, double guessConvidence, double guessExtraConvidence, String storageNodes,
-			String guessPath, String extraPath, CommLog log) {
-
-		// word, key, location, insert node, guessed storage nodes, confidence,
-		// hit,
-		// hit count, actual storage nodes, Seen Reject
-		writer.println(data.getWord() + "," + data.getKey() + ","
-				+ data.getLocation() + "," + data.getOriginNode() + ","
-				+ storageNodes + "," + guessConvidence + "," + guessExtraConvidence +","
-				+ (fullHit ? "TRUE" : "FALSE") + "," + foundPartCnt + ","
-				+ data.getActualStorageNodesToString() + ","
-				+ data.getActualStorageNodes().size() + "," + data.getHtl()
-				+ "," + guessPath.replace(",", "->").replace(" ", "") + ","
-				+ extraPath.replace(",", "->").replace(" ", "") + ","
-				+ log.toStringPath(data.getKey()) + ","
-				+ getRejectionStatus(data, log));
-	}
-	
-	private String getRejectionStatus(StoredWordData data, CommLog log){
-		if(!log.hasKey(data.getKey()))
-			return "?";
-		if(log.hasReject(data.getKey()))
-			return "TRUE";
-		return "FALSE";
-	}
-
 }

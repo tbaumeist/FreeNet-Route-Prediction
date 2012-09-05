@@ -5,8 +5,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
-import frp.dataFileReaders.CommLogFileReader;
-import frp.dataFileReaders.WordMapFileReader;
+import frp.dataFileReaders.CSVReader;
 import frp.dataFileReaders.TopologyFileReader;
 import frp.routing.PathSet;
 import frp.routing.RoutingManager;
@@ -20,18 +19,16 @@ public class ModelEvaluator {
 	 */
 	private static final int I_TOP = 0;
 	private static final int I_OUT = 1;
-	private static final int I_HTL = 2;
-	private static final int I_MAP = 3;
-	private static final int I_WORDS = 4;
-	private static final int I_COMM = 5;
-	private static final int I_HELP = 6;
+	private static final int I_ROUTE = 2;
+	private static final int I_DHTL = 3;
+	private static final int I_HELP = 4;
 	private static final String[][] PROG_ARGS = {
-			{ "-t", "(required) Topology file name." },
+			{ "-tbase", "(required) Topology file base name." },
 			{ "-o", "(required) Output file name." },
-			{ "-htl", "(required) Max hops to live count." },
-			{ "-map", "(required) Words mapped to storage nodes." },
-			{ "-words", "(required) Words inserted." },
-			{ "-comm", "(optional) Full communications log." },
+			{ "-route", "(required) Route prediction experiment file." },
+			{
+				"-dhtl",
+				"(optional) Default:0, Specify the number of deterministic hops to live to account for." },
 			{ "-h", "help command. Prints available arguments." } };
 
 	/*
@@ -57,89 +54,78 @@ public class ModelEvaluator {
 		}
 
 		// Output file
-		String outputFileName = CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_OUT), lstArgs);
+		String outputFileName = CmdLineTools.getRequiredArg(CmdLineTools
+				.getName(PROG_ARGS, I_OUT), lstArgs);
 
 		// Topology file
-		String topologyFileName = CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_TOP), lstArgs);
+		String topologyFileNameBase = CmdLineTools.getRequiredArg(CmdLineTools
+				.getName(PROG_ARGS, I_TOP), lstArgs);
 
 		// words mapped to storage nodes data file
-		String wordStorageMapFileName = CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_MAP), lstArgs);
+		String routeFileName = CmdLineTools.getRequiredArg(CmdLineTools
+				.getName(PROG_ARGS, I_ROUTE), lstArgs);
+		
+		String dhtlString = CmdLineTools.getArg(
+				CmdLineTools.getName(PROG_ARGS, I_DHTL), lstArgs, "0");
+		int dhtl = Integer.parseInt(dhtlString);
 
-		// words data file
-		String wordsFileName = CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_WORDS), lstArgs);
-
-		// communication log file
-		String commLogFileName = CmdLineTools.getArg(
-				CmdLineTools.getName(PROG_ARGS, I_COMM), lstArgs, "");
-
-		// Max HTL
-		int htl = Integer.parseInt(CmdLineTools.getRequiredArg(
-				CmdLineTools.getName(PROG_ARGS, I_HTL), lstArgs));
-
-		run(outputFileName, topologyFileName, wordsFileName,
-				wordStorageMapFileName, commLogFileName, htl);
+		run(outputFileName, topologyFileNameBase, routeFileName, dhtl);
 	}
 
 	public ModelEvaluator() {
 	}
 
-	public void run(String outputFileName, String topologyFileName,
-			String wordsFileName, String wordStorageMapFileName,
-			String commLogFileName, int maxHTL) throws Exception {
+	public void run(String outputFileName, String topologyFileNameBase,
+			String routeFileName, int dhtl) throws Exception {
 
 		// output stream
-		File outputFile = new File(outputFileName);
+		File outputFile = new File(outputFileName + ".csv");
 		PrintStream outputStream = new PrintStream(outputFile);
 
-		// topology file
-		TopologyFileReader topReader = new TopologyFileReader(topologyFileName);
-		Topology topology = topReader.readFile();
-
-		WordMapFileReader mapReader = new WordMapFileReader(
-				wordStorageMapFileName, wordsFileName);
-
-		List<StoredWordData> storedData = mapReader.readData(outputStream);
-
-		// process communication log
-		CommLog log = null;
-		if (!commLogFileName.isEmpty()) {
-			CommLogFileReader commReader = new CommLogFileReader(
-					commLogFileName);
-			log = commReader.readFile();
-			// communication log output file
-			File logDataFile = new File(outputFile.getAbsoluteFile()
-					+ ".log_process");
-			PrintStream logWriter = new PrintStream(logDataFile);
-			logWriter.println(log);
-		}
-
-		// use insert path only here
-		RoutingManager manager = new RoutingManager(maxHTL);
-		List<PathSet[]> pathSets = manager.calculateRoutesFromNodes(null, null,
-				topology, true);
-
-		// full data output file
-		File fullDataFile = new File(outputFile.getAbsoluteFile() + ".csv");
-		PrintStream fullWriter = new PrintStream(fullDataFile);
-
-		// Predicted paths output file
-		File predictDataFile = new File(outputFile.getAbsoluteFile()
-				+ ".predictedPaths");
-		PrintStream predictWriter = new PrintStream(predictDataFile);
-		predictWriter.println(topology);
-
-		for (PathSet[] sArray : pathSets) {
-			for (PathSet s : sArray)
-				predictWriter.println(s);
-		}
-
-		// Compare actual word storage to predicted
 		PathComparer comp = new PathComparer();
-		comp.compareStorageNodes(outputStream, fullWriter, topology,
-				storedData, pathSets, log, manager.getResetHTL(), maxHTL);
+		comp.writerHeader(outputStream);
+
+		// input file
+		CSVReader reader = new CSVReader(routeFileName);
+		List<ActualRoutePath> actPaths = ActualRoutePath.readFromFile(reader);
+		
+		String prevDataSet = "";
+		Topology topology = null;
+		RoutingManager manager = null;
+		List<PathSet[]> pathSets = null;
+
+		for (ActualRoutePath actPath : actPaths) {
+
+			String filePostFix = "-" + actPath.getNodeCount() + "-"
+					+ actPath.getPeerCount() + "-" + actPath.getHTL();
+			String topFileName = topologyFileNameBase + filePostFix + ".dot";
+
+			if(!prevDataSet.equals(filePostFix)){
+				prevDataSet = filePostFix;
+				// topology file
+				TopologyFileReader topReader = new TopologyFileReader(topFileName);
+				topology = topReader.readFile();
+	
+				// use insert path only here
+				manager = new RoutingManager(actPath.getHTL(), dhtl);
+				pathSets = manager.calculateRoutesFromNodes(null,
+						null, topology, true);
+	
+				// Predicted paths output file
+				File predictDataFile = new File(outputFile.getAbsoluteFile()
+						+ filePostFix + ".predictedPaths");
+				PrintStream predictWriter = new PrintStream(predictDataFile);
+				predictWriter.println(topology);
+	
+				for (PathSet[] sArray : pathSets) {
+					for (PathSet s : sArray)
+						predictWriter.println(s);
+				}
+			}
+
+			// Compare actual word storage to predicted
+			outputStream.println(comp.compareStorageNodes(topology, manager
+					.getResetHTL(), actPath.getHTL(), pathSets, actPath));
+		}
 	}
 }
