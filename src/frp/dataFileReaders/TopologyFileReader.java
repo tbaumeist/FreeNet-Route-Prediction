@@ -35,6 +35,7 @@ public class TopologyFileReader {
 
 				line = line.trim();
 				line = line.replace('\t', ' ');
+				//line = line.replace('-', ' ');
 				String[] parsed = line.split("\"");
 				if (parsed.length != 4)
 					continue;
