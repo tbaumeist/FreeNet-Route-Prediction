@@ -16,7 +16,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
-import frp.dataFileReaders.TopologyFileReader;
+import frp.dataFileReaders.TopologyFileReaderManager;
 import frp.main.rti.prediction.RTIPrediction;
 import frp.routing.Topology;
 import frp.utils.CmdLineTools;
@@ -78,9 +78,8 @@ public class RTIAnalysis {
 			PrintStream outputWriter = new PrintStream(outputFile);
 
 			// topology
-			TopologyFileReader topReader = new TopologyFileReader(
-					topologyFileName);
-			Topology topology = topReader.readFile();
+			TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+			Topology topology = topReader.readFromFile(topologyFileName);
 			
 			// Max Attack Group Size
 			if(maxAGS < 1)

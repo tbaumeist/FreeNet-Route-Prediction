@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import frp.dataFileReaders.TopologyFileReader;
+import frp.dataFileReaders.TopologyFileReaderManager;
 import frp.main.rti.analysis.AttackPair;
 import frp.routing.RoutingManager;
 import frp.routing.Topology;
@@ -64,8 +64,8 @@ public class RTIPrediction {
 		// / END: Arguments
 
 		// topology
-		TopologyFileReader topReader = new TopologyFileReader(topologyFileName);
-		Topology topology = topReader.readFile();
+		TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+		Topology topology = topReader.readFromFile(topologyFileName);
 
 		// calculate the intersection points
 		this.run(topology, maxHTL, outputFileName, dhtl);

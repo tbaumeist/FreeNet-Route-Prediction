@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
-import frp.dataFileReaders.TopologyFileReader;
+import frp.dataFileReaders.TopologyFileReaderManager;
 import frp.routing.Topology;
 
 public class Helper {
@@ -19,23 +19,20 @@ public class Helper {
 	}
 	
 	public static Topology load50_4Topology() throws Exception{
-		TopologyFileReader topReader = new TopologyFileReader(
-				getResourcePath("topology-50-4.dot"));
-		Topology topology = topReader.readFile();
+		TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+		Topology topology = topReader.readFromFile(getResourcePath("topology-50-4.dot"));
 		return topology;
 	}
 	
 	public static Topology load125_10Topology() throws Exception{
-		TopologyFileReader topReader = new TopologyFileReader(
-				getResourcePath("topology-125-10.dot"));
-		Topology topology = topReader.readFile();
+		TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+		Topology topology = topReader.readFromFile(getResourcePath("topology-125-10.dot"));
 		return topology;
 	}
 	
 	public static Topology load200_10Topology() throws Exception{
-		TopologyFileReader topReader = new TopologyFileReader(
-				getResourcePath("topology-200-10.dot"));
-		Topology topology = topReader.readFile();
+		TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+		Topology topology = topReader.readFromFile(getResourcePath("topology-200-10.dot"));
 		return topology;
 	}
 	

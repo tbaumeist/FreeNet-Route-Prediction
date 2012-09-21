@@ -7,26 +7,41 @@ import java.io.FileReader;
 import frp.routing.Node;
 import frp.routing.Topology;
 
-public class TopologyFileReader {
-	private String topologyFileName = "";
-	
-	public TopologyFileReader(String fileName){
-		this.topologyFileName = fileName;
+class TopologyFileReaderDOT implements ITopologyFileReader {
+
+	@Override
+	public boolean canRead(String fileName) throws Exception {
+		try {
+			File top = new File(fileName);
+			if (!top.exists())
+				throw new Exception("Unable to find the topology file: "
+						+ fileName);
+
+			BufferedReader in = new BufferedReader(new FileReader(top));
+			String line = in.readLine();
+			return line.toLowerCase().startsWith("digraph");
+		} catch (Exception ex) {
+			throw new Exception(
+					"Error reading topology file. Improperly formatted. "
+							+ ex.getMessage());
+		}
 	}
-	
-	public Topology readFile() throws Exception {
+
+	public Topology readFromFile(String fileName) throws Exception {
 		Topology topology = new Topology();
-		readFromFile(topology, this.topologyFileName);
+		readFile(topology, fileName);
 		topology.clearOneWayConnections();
 		return topology;
 	}
-	
-	private void readFromFile(Topology topology, String topFileName) throws Exception {
+
+	private void readFile(Topology topology, String topFileName)
+			throws Exception {
 		try {
 			File top = new File(topFileName);
-			if(!top.exists())
-				throw new Exception("Unable to find the topology file: "+ topFileName);
-			
+			if (!top.exists())
+				throw new Exception("Unable to find the topology file: "
+						+ topFileName);
+
 			BufferedReader in = new BufferedReader(new FileReader(top));
 			String line;
 			while ((line = in.readLine()) != null) {
@@ -35,13 +50,13 @@ public class TopologyFileReader {
 
 				line = line.trim();
 				line = line.replace('\t', ' ');
-				//line = line.replace('-', ' ');
+				// line = line.replace('-', ' ');
 				String[] parsed = line.split("\"");
 				if (parsed.length != 4)
 					continue;
 
 				double locA = Double.parseDouble(parsed[1].split(" ")[0]);
-				String idA	=	parsed[1].split(" ")[1];
+				String idA = parsed[1].split(" ")[1];
 				double locB = Double.parseDouble(parsed[3].split(" ")[0]);
 				String idB = parsed[3].split(" ")[1];
 
@@ -58,7 +73,9 @@ public class TopologyFileReader {
 				nodeA.addNeighbor(nodeB);
 			}
 		} catch (Exception ex) {
-			throw new Exception("Error reading topology file. Improperly formatted. "+ ex.getMessage());
+			throw new Exception(
+					"Error reading topology file. Improperly formatted. "
+							+ ex.getMessage());
 		}
 	}
 }

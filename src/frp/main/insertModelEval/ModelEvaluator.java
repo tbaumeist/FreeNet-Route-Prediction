@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import frp.dataFileReaders.CSVReader;
-import frp.dataFileReaders.TopologyFileReader;
+import frp.dataFileReaders.TopologyFileReaderManager;
 import frp.routing.PathSet;
 import frp.routing.RoutingManager;
 import frp.routing.Topology;
@@ -89,6 +89,8 @@ public class ModelEvaluator {
 		CSVReader reader = new CSVReader(routeFileName);
 		List<ActualRoutePath> actPaths = ActualRoutePath.readFromFile(reader);
 		
+		TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+		
 		String prevDataSet = "";
 		Topology topology = null;
 		RoutingManager manager = null;
@@ -103,8 +105,7 @@ public class ModelEvaluator {
 			if(!prevDataSet.equals(filePostFix)){
 				prevDataSet = filePostFix;
 				// topology file
-				TopologyFileReader topReader = new TopologyFileReader(topFileName);
-				topology = topReader.readFile();
+				topology = topReader.readFromFile(topFileName);
 	
 				// use insert path only here
 				manager = new RoutingManager(actPath.getHTL(), dhtl);
