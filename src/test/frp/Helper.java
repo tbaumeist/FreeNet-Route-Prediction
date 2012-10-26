@@ -57,9 +57,14 @@ public class Helper {
 		
 		String line1, line2;
 		while((line1 = in1.readLine()) != null && (line2 = in2.readLine()) != null){
-			if(!line1.equals(line2))
+			if(!line1.equals(line2)){
+				in1.close();
+				in2.close();
 				return false;
+			}
 		}
+		in1.close();
+		in2.close();
 		return true;
 	}
 }

@@ -99,6 +99,7 @@ public class AttackNodeAnalysisSingle {
 
 			outputWriter.println(s.calcGraphStats(nodeCount, peerCount, htl,
 					dataSetCount));
+			outputWriter.close();
 
 		} catch (Exception ex) {
 			System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));

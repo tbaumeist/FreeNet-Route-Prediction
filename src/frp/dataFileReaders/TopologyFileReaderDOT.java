@@ -19,6 +19,7 @@ class TopologyFileReaderDOT implements ITopologyFileReader {
 
 			BufferedReader in = new BufferedReader(new FileReader(top));
 			String line = in.readLine();
+			in.close();
 			return line.toLowerCase().startsWith("digraph");
 		} catch (Exception ex) {
 			throw new Exception(
@@ -72,6 +73,7 @@ class TopologyFileReaderDOT implements ITopologyFileReader {
 
 				nodeA.addNeighbor(nodeB);
 			}
+			in.close();
 		} catch (Exception ex) {
 			throw new Exception(
 					"Error reading topology file. Improperly formatted. "

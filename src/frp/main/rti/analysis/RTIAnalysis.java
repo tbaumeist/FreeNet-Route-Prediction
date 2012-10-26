@@ -108,6 +108,8 @@ public class RTIAnalysis {
 			AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
 					topology.getAllNodes());
 			outputWriter.println(attSet.toStringCSV());
+			
+			outputWriter.close();
 
 		} catch (Exception ex) {
 			System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));

@@ -20,6 +20,7 @@ class TopologyFileReaderGML implements ITopologyFileReader{
 
 			BufferedReader in = new BufferedReader(new FileReader(top));
 			String line = in.readLine();
+			in.close();
 			return line.toLowerCase().startsWith("graph");
 		} catch (Exception ex) {
 			throw new Exception(

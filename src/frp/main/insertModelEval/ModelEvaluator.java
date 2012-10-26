@@ -122,6 +122,7 @@ public class ModelEvaluator {
 					for (PathSet s : sArray)
 						predictWriter.println(s);
 				}
+				predictWriter.close();
 			}
 
 			// Compare actual word storage to predicted

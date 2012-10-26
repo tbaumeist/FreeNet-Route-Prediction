@@ -117,6 +117,7 @@ public class AttackNodeAnalysisMulti {
 			outputWriter.println();
 			dataSetCount++;
 		}
+		outputWriter.close();
 	}
 
 	private String getTopologyFileNameBase(CSVReader reader) {

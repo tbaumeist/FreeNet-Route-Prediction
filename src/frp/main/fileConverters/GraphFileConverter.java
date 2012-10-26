@@ -78,6 +78,8 @@ public class GraphFileConverter {
 					writer.println(matcher.group(1) + "  <data key=\"difference\">"+ diff +"</data>");
 				}
 			}
+			writer.close();
+			reader.close();
 			File tmp = new File(tmpOutputFile);
 			tmp.delete();
 			
