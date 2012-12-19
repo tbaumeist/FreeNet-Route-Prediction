@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<!-- Configuration of the Ant build system to generate a Jar file -->
+<project name="FreeNet-Route-Prediction" default="CreateJars">
+
+	<target name="CreateJars" description="Create Jar files" depends="local-jars, global-jars" />
+
+	<target name="local-jars">
+		<delete dir="./dist/*" />
+		<mkdir dir="./dist" />
+		<jar basedir="./bin" jarfile="./dist/FreeNet-Route-Prediction.jar" includes="frp/" />
+	</target>
+
+	<target name="-check-global-avail" unless="file.exists">
+		<available property="file.exists" file="../../bin" />
+	</target>
+
+	<target name="global-jars" depends="-check-global-avail" if="${file.exists}">
+		<copy file="./dist/FreeNet-Route-Prediction.jar" todir="../../bin" />
+	</target>
+</project>
