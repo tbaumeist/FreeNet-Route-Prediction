@@ -4,12 +4,15 @@
 
 	<target name="CreateJars" description="Create Jar files" depends="local-jars, global-jars" />
 
+	<!-- Create the jar files within the project -->
 	<target name="local-jars">
 		<delete dir="./dist/*" />
 		<mkdir dir="./dist" />
 		<jar basedir="./bin" jarfile="./dist/FreeNet-Route-Prediction.jar" includes="frp/" />
 	</target>
 
+	<!-- Check if this project is used as a sub project -->
+	<!-- If so copy jar to main project -->
 	<target name="-check-global-avail" unless="file.exists">
 		<available property="file.exists" file="../../bin" />
 	</target>
