@@ -7,3 +7,5 @@ This code implements the Freenet route prediction model.
 
  File -> Import -> Existing Projects into Workspace.
 
+Project uses ANT to build jar files.
+
