@@ -2,9 +2,6 @@
 /.*
 /*~
 
-/bin
+dist
+bin
 
-# Package Files #
-*.jar
-*.war
-*.ear
