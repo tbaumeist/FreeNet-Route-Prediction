@@ -13,7 +13,7 @@ import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
 
-public class GephiHelper {
+public class GephiHelper { 
 
 	public DirectedGraph loadGraphFile(String topologyFileName) throws Exception{
 		//Init a project - and therefore a workspace

@@ -11,7 +11,7 @@ public class Helper {
 	private final static String resourcePath = "bin/test/resources/";
 	
 	public static String getResourcePath(){
-		return resourcePath;
+		return new java.io.File("").getAbsolutePath() + File.separator + resourcePath;
 	}
 	
 	public static String getResourcePath(String resource){
