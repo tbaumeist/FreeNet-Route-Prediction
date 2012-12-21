@@ -20,7 +20,7 @@ public class Helper {
 	
 	public static Topology load50_4Topology() throws Exception{
 		TopologyFileReaderManager topReader = new TopologyFileReaderManager();
-		Topology topology = topReader.readFromFile(getResourcePath("topology-50-4.dot"));
+		Topology topology = topReader.readFromFile(getResourcePath("topology-50-4-full.dot"));
 		return topology;
 	}
 	

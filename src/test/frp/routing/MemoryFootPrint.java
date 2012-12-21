@@ -29,6 +29,8 @@ public class MemoryFootPrint extends RoutingManager {
 		
 		Topology top = Helper.load125_10Topology();
 		List<Pair<Double, String>> startNodes = checkStartNodes(null, top);
+		
+		System.out.println("Memory footprint no cache ...");
 		Progresser prog = new Progresser(System.out, startNodes.size() * 2);
 		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
 				startNodes, top, true);
@@ -39,7 +41,7 @@ public class MemoryFootPrint extends RoutingManager {
 		assertTrue(pathRequestSets != null);
 		
 		Runtime runtime = Runtime.getRuntime();
-		System.out.println("Used memory no cache: " + (runtime.totalMemory() - runtime.freeMemory()) / this.mb + "mb");
+		System.out.println("\tUsed memory no cache: " + (runtime.totalMemory() - runtime.freeMemory()) / this.mb + "mb");
 	}
 	
 	@Test
@@ -47,6 +49,8 @@ public class MemoryFootPrint extends RoutingManager {
 		
 		Topology top = Helper.load125_10Topology();
 		List<Pair<Double, String>> startNodes = checkStartNodes(null, top);
+		
+		System.out.println("Memory footprint cache ...");
 		Progresser prog = new Progresser(System.out, startNodes.size() * 2);
 		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
 				startNodes, top, true);
@@ -62,7 +66,7 @@ public class MemoryFootPrint extends RoutingManager {
 				startNodes, top, false);
 		
 		Runtime runtime = Runtime.getRuntime();
-		System.out.println("Used memory with cache: " + (runtime.totalMemory() - runtime.freeMemory()) / this.mb + "mb");
+		System.out.println("\tUsed memory with cache: " + (runtime.totalMemory() - runtime.freeMemory()) / this.mb + "mb");
 		
 		assertTrue(pathRequestSets != null);
 		

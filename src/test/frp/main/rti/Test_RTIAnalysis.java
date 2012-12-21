@@ -17,7 +17,7 @@ public class Test_RTIAnalysis {
 	@Test
 	public void testMemoryUsage() throws Exception {
 		//Topology topology = Helper.load200_10Topology();
-		Topology topology = Helper.load125_10Topology();
+		Topology topology = Helper.load50_4Topology();
 		
 		int maxHTL = 6;
 		int dhtl = 0;
