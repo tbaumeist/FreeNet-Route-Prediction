@@ -10,7 +10,7 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/Jar Creator.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/Route Prediction Ant Builder.launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
