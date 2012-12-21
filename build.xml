@@ -1,17 +1,17 @@
 <?xml version="1.0" ?>
 <!-- Configuration of the Ant build system to generate a Jar file -->
 <project name="FreeNet-Route-Prediction" default="CreateJars">
-	<property name="main.src" value="src"/>
-	<property name="main.dist" value="dist"/>
-	<property name="main.build" value="bin"/>
-	<property name="main.jar" value="freenet-route-prediction.jar"/>
-	<property name="main.global" value="../../bin"/>
-	<property name="main.lib" value="lib"/>
+	<property name="main.src" value="src" />
+	<property name="main.dist" value="dist" />
+	<property name="main.build" value="bin" />
+	<property name="main.jar" value="freenet-route-prediction.jar" />
+	<property name="main.global" value="../../bin" />
+	<property name="main.lib" value="lib" />
 	<path id="external.jars">
-		<fileset dir="${main.lib}" includes="**/*.jar"/>
+		<fileset dir="${main.lib}" includes="**/*.jar" />
 	</path>
 
-	<target name="CreateJars" description="Create Jar files" depends="clean, local-jars, global-jars"/>
+	<target name="CreateJars" description="Create Jar files" depends="clean, local-jars, global-jars" />
 
 	<target name="clean">
 		<delete dir="${main.build}" />
@@ -23,14 +23,14 @@
 
 	<!-- Create the jar files within the project -->
 	<target name="local-jars">
-		<javac debug="true" srcdir="${main.src}" destdir="${main.build}" classpathref="external.jars" includeantruntime="false"/>
+		<javac debug="true" srcdir="${main.src}" destdir="${main.build}" classpathref="external.jars" includeantruntime="false" />
 		<copy todir="${main.build}">
-			<fileset dir="${main.src}" excludes="**/*.java"/>
+			<fileset dir="${main.src}" excludes="**/*.java" />
 		</copy>
 		<jar basedir="${main.build}" jarfile="${main.build}/${main.jar}" includes="frp/" />
 		<zip destfile="${main.dist}/${main.jar}">
-			<zipgroupfileset dir="${main.lib}" includes="**/*.jar" excludes="junit.jar"/>
-			<zipgroupfileset dir="${main.build}" includes="**/*.jar"/>
+			<zipgroupfileset dir="${main.lib}" includes="**/*.jar" excludes="junit.jar" />
+			<zipgroupfileset dir="${main.build}" includes="**/*.jar" />
 		</zip>
 	</target>
 
@@ -41,6 +41,8 @@
 	</target>
 
 	<target name="global-jars" depends="-check-global-avail" if="${file.exists}">
-		<copy file="${main.dist}/${main.jar}" todir="${main.global}" />
+		<copy todir="${main.global}">
+			<fileset dir="${main.dist}" includes="**/*.jar" />
+		</copy>
 	</target>
 </project>
