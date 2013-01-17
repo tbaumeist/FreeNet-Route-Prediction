@@ -3,7 +3,6 @@ package frp.gephi;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Paths;
 
 import org.gephi.graph.api.DirectedGraph;
 import org.gephi.graph.api.GraphController;
@@ -12,7 +11,6 @@ import org.gephi.io.importer.api.Container;
 import org.gephi.io.importer.api.EdgeDefault;
 import org.gephi.io.importer.api.FileType;
 import org.gephi.io.importer.api.ImportController;
-import org.gephi.io.importer.plugin.file.ImporterBuilderDOT;
 import org.gephi.io.importer.spi.FileImporterBuilder;
 import org.gephi.io.processor.plugin.DefaultProcessor;
 import org.gephi.project.api.ProjectController;
