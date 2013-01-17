@@ -23,7 +23,7 @@
 
 	<!-- Create the jar files within the project -->
 	<target name="local-jars">
-		<javac debug="true" srcdir="${main.src}" destdir="${main.build}" classpathref="external.jars" includeantruntime="false" />
+		<javac debug="true" fork="true" srcdir="${main.src}" destdir="${main.build}" classpathref="external.jars" includeantruntime="false" />
 		<copy todir="${main.build}">
 			<fileset dir="${main.src}" excludes="**/*.java" />
 		</copy>
