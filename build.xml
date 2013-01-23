@@ -5,6 +5,7 @@
 	<property name="main.dist" value="dist" />
 	<property name="main.build" value="bin" />
 	<property name="main.jar" value="freenet-route-prediction.jar" />
+	<property name="main.noDepJar" value="freenet-route-prediction-nodep.jar" />
 	<property name="main.global" value="../../bin" />
 	<property name="main.lib" value="lib" />
 	<path id="external.jars">
@@ -32,6 +33,7 @@
 			<zipgroupfileset dir="${main.lib}" includes="**/*.jar" excludes="junit.jar" />
 			<zipgroupfileset dir="${main.build}" includes="**/*.jar" />
 		</zip>
+		<copy tofile="${main.dist}/${main.noDepJar}" file="${main.build}/${main.jar}"/>
 	</target>
 
 	<!-- Check if this project is used as a sub project -->
@@ -42,7 +44,7 @@
 
 	<target name="global-jars" depends="-check-global-avail" if="${file.exists}">
 		<copy todir="${main.global}">
-			<fileset dir="${main.dist}" includes="**/*.jar" />
+			<fileset dir="${main.dist}" includes="**/*.jar" excludes="**/*-nodep.jar" />
 		</copy>
 	</target>
 </project>
