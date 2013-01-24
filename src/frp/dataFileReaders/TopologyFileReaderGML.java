@@ -89,5 +89,6 @@ public class TopologyFileReaderGML extends ITopologyFileReader {
 		Node sourceNode = allNodes.get(sourceId);
 		Node targetNode = allNodes.get(targetId);
 		sourceNode.addNeighbor(targetNode);
+		targetNode.addNeighbor(sourceNode);
 	}
 }
