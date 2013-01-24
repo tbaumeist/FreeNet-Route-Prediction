@@ -1,23 +1,18 @@
 package frp.dataFileReaders;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import frp.routing.Node;
 import frp.routing.Topology;
 
-class TopologyFileReaderDOT implements ITopologyFileReader {
+class TopologyFileReaderDOT extends ITopologyFileReader {
 
-	@Override
-	public boolean canRead(String fileName) throws Exception {
+	public boolean canRead(InputStream topInput) throws Exception {
 		try {
-			File top = new File(fileName);
-			if (!top.exists())
-				throw new Exception("Unable to find the topology file: "
-						+ fileName);
-
-			BufferedReader in = new BufferedReader(new FileReader(top));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					topInput));
 			String line = in.readLine();
 			in.close();
 			return line.toLowerCase().startsWith("digraph");
@@ -28,22 +23,18 @@ class TopologyFileReaderDOT implements ITopologyFileReader {
 		}
 	}
 
-	public Topology readFromFile(String fileName) throws Exception {
+	public Topology readFromFile(InputStream topInput) throws Exception {
 		Topology topology = new Topology();
-		readFile(topology, fileName);
+		readFile(topology, topInput);
 		topology.clearOneWayConnections();
 		return topology;
 	}
 
-	private void readFile(Topology topology, String topFileName)
+	private void readFile(Topology topology, InputStream topInput)
 			throws Exception {
 		try {
-			File top = new File(topFileName);
-			if (!top.exists())
-				throw new Exception("Unable to find the topology file: "
-						+ topFileName);
-
-			BufferedReader in = new BufferedReader(new FileReader(top));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					topInput));
 			String line;
 			while ((line = in.readLine()) != null) {
 				if (!line.contains("->"))
