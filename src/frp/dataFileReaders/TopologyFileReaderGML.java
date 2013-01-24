@@ -1,8 +1,6 @@
 package frp.dataFileReaders;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -10,7 +8,7 @@ import java.util.HashMap;
 import frp.routing.Node;
 import frp.routing.Topology;
 
-class TopologyFileReaderGML extends ITopologyFileReader {
+public class TopologyFileReaderGML extends ITopologyFileReader {
 
 	public boolean canRead(InputStream topInput) throws Exception {
 		try {
