@@ -14,7 +14,7 @@ public class Node extends INode {
 	private final static String DELIMITER = "&&";
 
 	public Node(double loc, String id) {
-		this.location = DistanceTools.round(loc);
+		this.location = loc;
 		this.id = id;
 	}
 

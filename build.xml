@@ -28,12 +28,12 @@
 		<copy todir="${main.build}">
 			<fileset dir="${main.src}" excludes="**/*.java" />
 		</copy>
-		<jar basedir="${main.build}" jarfile="${main.build}/${main.jar}" includes="frp/" />
+		<jar basedir="${main.build}" jarfile="${main.build}/jar/${main.jar}" includes="frp/" />
 		<zip destfile="${main.dist}/${main.jar}">
 			<zipgroupfileset dir="${main.lib}" includes="**/*.jar" excludes="junit.jar" />
-			<zipgroupfileset dir="${main.build}" includes="**/*.jar" />
+			<zipgroupfileset dir="${main.build}/jar" includes="**/*.jar" />
 		</zip>
-		<copy tofile="${main.dist}/${main.noDepJar}" file="${main.build}/${main.jar}"/>
+		<copy tofile="${main.dist}/${main.noDepJar}" file="${main.build}/jar/${main.jar}"/>
 	</target>
 
 	<!-- Check if this project is used as a sub project -->
