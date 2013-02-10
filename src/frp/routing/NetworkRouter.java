@@ -5,181 +5,182 @@ import java.util.Collections;
 import java.util.List;
 
 public class NetworkRouter {
-	private int dhtl;
+    private int dhtl;
 
-	public NetworkRouter(int dhtl) {
-		this.dhtl = dhtl;
-	}
+    public NetworkRouter(int dhtl) {
+        this.dhtl = dhtl;
+    }
 
-	public List<Path> findPaths(int resetHTL, int htl, Topology top,
-			double startNode, String startNodeId, boolean isInsertPath)
-			throws Exception {
+    public List<Path> findPaths(int resetHTL, int htl, Topology top,
+            double startNode, String startNodeId, boolean isInsertPath)
+            throws Exception {
 
-		Node start = top.findNode(startNode, startNodeId);
-		if (start == null)
-			throw new Exception("Unable to find specified start node");
+        Node start = top.findNode(startNode, startNodeId);
+        if (start == null)
+            throw new Exception("Unable to find specified start node");
 
-		List<Path> paths = new ArrayList<Path>();
-		List<Node> visited = new ArrayList<Node>();
-		Path currentPath = new Path();
-		SubRange startRange = new SubRange(start, new Edge(0), new Edge(0));
-		int resetHop = -1;
+        List<Path> paths = new ArrayList<Path>();
+        List<Node> visited = new ArrayList<Node>();
+        Path currentPath = new Path();
+        SubRange startRange = new SubRange(start, new Edge(0), new Edge(0));
+        int resetHop = -1;
 
-		if (isInsertPath) // reset hop only used for inserts
-			resetHop = resetHTL;
+        if (isInsertPath) // reset hop only used for inserts
+            resetHop = resetHTL;
 
-		visited.add(start);
-		currentPath.addNodeAsRR(startRange, htl);
+        visited.add(start);
+        currentPath.addNodeAsRR(startRange, htl);
 
-		_findPaths(paths, currentPath, visited, startRange, htl - 1, resetHop);
+        _findPaths(paths, currentPath, visited, startRange, htl - 1, resetHop);
 
-		currentPath.removeLastNode();
-		assert (currentPath.getNodes().isEmpty());
-		
-		// merge adjacent paths together to reduce output
-		this.mergeAdjacent(paths);
+        currentPath.removeLastNode();
+        assert (currentPath.getNodes().isEmpty());
 
-		return paths;
-	}
-	
-	private void mergeAdjacent(List<Path> paths){
-		// work from the end back since we may remove entries
-		for(int i = paths.size() - 1; i > 0; i--){
-			Path a = paths.get(i - 1);
-			Path b = paths.get(i);
-			if( a.equals(b) && a.getRange().areAdjacent(b.getRange()) ){
-				// set a range to be the merged range
-				a.setRange(a.getRange().addAdjacentRanges(b.getRange()));
-				// remove b
-				paths.remove(i);
-			}
-		}
-	}
+        // merge adjacent paths together to reduce output
+        this.mergeAdjacent(paths);
 
-	private boolean _findPaths(List<Path> paths, Path currentPath,
-			List<Node> visited, SubRange range, int hopsToLive, int resetHop)
-			throws Exception {
+        return paths;
+    }
 
-		currentPath.setRange(range);
-		// stop when htl expires
-		// stop when the next closest node is the same as the previous node
-		// (self route)
-		if (shouldStop(hopsToLive) || range.isSelfRoute()) {
-			paths.add(currentPath.clone());
-			return true;
-		}
-		List<Node> oldVisited = null;
-		if (hopsToLive > 0 && hopsToLive == resetHop) {
-			oldVisited = visited;
-			visited = new ArrayList<Node>();
-			visited.add(range.getNode());
-		}
+    private void mergeAdjacent(List<Path> paths) {
+        // work from the end back since we may remove entries
+        for (int i = paths.size() - 1; i > 0; i--) {
+            Path a = paths.get(i - 1);
+            Path b = paths.get(i);
+            if (a.equals(b) && a.getRange().areAdjacent(b.getRange())) {
+                // set a range to be the merged range
+                a.setRange(a.getRange().addAdjacentRanges(b.getRange()));
+                // remove b
+                paths.remove(i);
+            }
+        }
+    }
 
-		// List<RouteRange> allRanges = getRanges(range, visited,
-		// hopsToLive < resetHop);
-		List<SubRange> allRanges = getRanges(range, visited, false);
+    private boolean _findPaths(List<Path> paths, Path currentPath,
+            List<Node> visited, SubRange range, int hopsToLive, int resetHop)
+            throws Exception {
 
-		int pathsFound = 0;
+        currentPath.setRange(range);
+        // stop when htl expires
+        // stop when the next closest node is the same as the previous node
+        // (self route)
+        if (shouldStop(hopsToLive) || range.isSelfRoute()) {
+            paths.add(currentPath.clone());
+            return true;
+        }
+        List<Node> oldVisited = null;
+        if (hopsToLive > 0 && hopsToLive == resetHop) {
+            oldVisited = visited;
+            visited = new ArrayList<Node>();
+            visited.add(range.getNode());
+        }
 
-		for (SubRange rr : allRanges) {
-			if (range.overlaps(rr)) {
-				int hopMod = 0;
-				if (rr.getIsRetry() && hopsToLive <= resetHop) {
-					hopMod--;
-				}
-				pathsFound++;
-				visited.add(rr.getNode());
-				currentPath.addNodeAsRR(rr, hopsToLive + hopMod);
-				if (_findPaths(paths, currentPath, visited, rr, hopsToLive - 1
-						+ hopMod, resetHop)) {
+        // List<RouteRange> allRanges = getRanges(range, visited,
+        // hopsToLive < resetHop);
+        List<SubRange> allRanges = getRanges(range, visited, false);
 
-					removeFromEndUpTo(visited, rr.getNode());
-				}
-				currentPath.removeLastNode();
-			}
-		}
-		if (pathsFound == 0) {
-			Path failed = currentPath.clone();
-			if(hopsToLive > 0) // only consider it a failure, if it occurred during regular routing
-				failed.setSuccess(false);
-			paths.add(failed);
-		}
+        int pathsFound = 0;
 
-		if (oldVisited != null)
-			visited = oldVisited;
+        for (SubRange rr : allRanges) {
+            if (range.overlaps(rr)) {
+                int hopMod = 0;
+                if (rr.getIsRetry() && hopsToLive <= resetHop) {
+                    hopMod--;
+                }
+                pathsFound++;
+                visited.add(rr.getNode());
+                currentPath.addNodeAsRR(rr, hopsToLive + hopMod);
+                if (_findPaths(paths, currentPath, visited, rr, hopsToLive - 1
+                        + hopMod, resetHop)) {
 
-		return pathsFound > 0;
-	}
+                    removeFromEndUpTo(visited, rr.getNode());
+                }
+                currentPath.removeLastNode();
+            }
+        }
+        if (pathsFound == 0) {
+            Path failed = currentPath.clone();
+            if (hopsToLive > 0) // only consider it a failure, if it occurred
+                                // during regular routing
+                failed.setSuccess(false);
+            paths.add(failed);
+        }
 
-	private void removeFromEndUpTo(List<Node> visited, Node n) {
-		for (int i = visited.size() - 1; i >= 0; i--) {
-			boolean found = visited.get(i).equals(n);
-			visited.remove(i);
-			if (found)
-				return;
-		}
-	}
+        if (oldVisited != null)
+            visited = oldVisited;
 
-	private List<SubRange> getRangesSimple(SubRange range,
-			List<Node> visited, boolean includeSelf) {
+        return pathsFound > 0;
+    }
 
-		List<SubRange> ranges = range.getNode().getPathsOut(visited,
-				includeSelf);
-		ranges = splitRanges(range, ranges);
+    private void removeFromEndUpTo(List<Node> visited, Node n) {
+        for (int i = visited.size() - 1; i >= 0; i--) {
+            boolean found = visited.get(i).equals(n);
+            visited.remove(i);
+            if (found)
+                return;
+        }
+    }
 
-		return ranges;
-	}
+    private List<SubRange> getRangesSimple(SubRange range, List<Node> visited,
+            boolean includeSelf) {
 
-	private List<SubRange> getRanges(SubRange range, List<Node> visited,
-			boolean includeSelf) {
+        List<SubRange> ranges = range.getNode().getPathsOut(visited,
+                includeSelf);
+        ranges = splitRanges(range, ranges);
 
-		List<SubRange> ranges = getRangesSimple(range, visited, includeSelf);
-		List<Node> visitedOnlyMe = new ArrayList<Node>();
-		if (visited.size() > 1) // prev node
-			visitedOnlyMe.add(visited.get(visited.size() - 2));
-		visitedOnlyMe.add(range.getNode()); // current node
-		List<SubRange> allRanges = getRangesSimple(range, visitedOnlyMe,
-				includeSelf);
+        return ranges;
+    }
 
-		for (SubRange rr : allRanges) {
-			if (visited.contains(rr.getNode()))
-				ranges = splitRanges(rr, ranges);
-		}
+    private List<SubRange> getRanges(SubRange range, List<Node> visited,
+            boolean includeSelf) {
 
-		for (SubRange rr : ranges) {
-			for (SubRange rr2 : allRanges) {
-				if (visited.contains(rr2.getNode())) {
-					if (rr.overlaps(rr2)) {
-						rr.setIsRetry(true);
-					}
-				}
-			}
-		}
+        List<SubRange> ranges = getRangesSimple(range, visited, includeSelf);
+        List<Node> visitedOnlyMe = new ArrayList<Node>();
+        if (visited.size() > 1) // prev node
+            visitedOnlyMe.add(visited.get(visited.size() - 2));
+        visitedOnlyMe.add(range.getNode()); // current node
+        List<SubRange> allRanges = getRangesSimple(range, visitedOnlyMe,
+                includeSelf);
 
-		return ranges;
-	}
+        for (SubRange rr : allRanges) {
+            if (visited.contains(rr.getNode()))
+                ranges = splitRanges(rr, ranges);
+        }
 
-	private boolean shouldStop(int hopsToLive) {
-		return hopsToLive <= (-1 * this.dhtl); // go on extra hops
-		 //return hopsToLive <= 0;
-		//return hopsToLive <= -4; // include 4 additional probable storage nodes
-	}
+        for (SubRange rr : ranges) {
+            for (SubRange rr2 : allRanges) {
+                if (visited.contains(rr2.getNode())) {
+                    if (rr.overlaps(rr2)) {
+                        rr.setIsRetry(true);
+                    }
+                }
+            }
+        }
 
-	private List<SubRange> splitRanges(SubRange range,
-			List<SubRange> ranges) {
+        return ranges;
+    }
 
-		List<SubRange> newRanges = new ArrayList<SubRange>();
+    private boolean shouldStop(int hopsToLive) {
+        return hopsToLive <= (-1 * this.dhtl); // go on extra hops
+        // return hopsToLive <= 0;
+        // return hopsToLive <= -4; // include 4 additional probable storage
+        // nodes
+    }
 
-		for (SubRange rr : ranges) {
-			if (range.overlaps(rr)) {
+    private List<SubRange> splitRanges(SubRange range, List<SubRange> ranges) {
 
-				newRanges.addAll(range.splitRangeOverMe(rr));
-			} else {
-				newRanges.add(rr);
-			}
-		}
-		Collections.sort(newRanges);
-		return newRanges;
-	}
+        List<SubRange> newRanges = new ArrayList<SubRange>();
+
+        for (SubRange rr : ranges) {
+            if (range.overlaps(rr)) {
+
+                newRanges.addAll(range.splitRangeOverMe(rr));
+            } else {
+                newRanges.add(rr);
+            }
+        }
+        Collections.sort(newRanges);
+        return newRanges;
+    }
 
 }

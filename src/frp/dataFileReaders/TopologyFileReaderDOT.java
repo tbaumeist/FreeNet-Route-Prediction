@@ -9,6 +9,7 @@ import frp.routing.Topology;
 
 public class TopologyFileReaderDOT extends ITopologyFileReader {
 
+    @Override
     public boolean canRead(InputStream topInput) throws Exception {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(
@@ -23,6 +24,7 @@ public class TopologyFileReaderDOT extends ITopologyFileReader {
         }
     }
 
+    @Override
     public Topology readFromFile(InputStream topInput) throws Exception {
         Topology topology = new Topology();
         readFile(topology, topInput);

@@ -9,201 +9,201 @@ import frp.utils.DistanceTools;
 
 public class Node extends INode {
 
-	private List<Node> neighbors = new CircleList<Node>();
-	
-	private final static String DELIMITER = "&&";
+    private List<Node> neighbors = new CircleList<Node>();
 
-	public Node(double loc, String id) {
-		this.location = loc;
-		this.id = id;
-	}
+    private final static String DELIMITER = "&&";
 
-	public void addNeighbor(Node node) {
-		if (this.neighbors.contains(node))
-			return;
+    public Node(double loc, String id) {
+        this.location = loc;
+        this.id = id;
+    }
 
-		this.neighbors.add(node);
-		Collections.sort(this.neighbors);
-	}
+    public void addNeighbor(Node node) {
+        if (this.neighbors.contains(node))
+            return;
 
-	public void removeNeighbors(List<Node> nodes) {
-		this.neighbors.removeAll(nodes);
-	}
-	
-	public boolean hasDirectNeighbor(Node n){
-		return this.getDirectNeighbors().contains(n);
-	}
+        this.neighbors.add(node);
+        Collections.sort(this.neighbors);
+    }
 
-	public List<Node> getDirectNeighbors() {
-		return getDirectNeighbors(null);
-	}
+    public void removeNeighbors(List<Node> nodes) {
+        this.neighbors.removeAll(nodes);
+    }
 
-	public List<Node> getDirectNeighbors(List<Node> ignoreNodes) {
-		List<Node> ns = new CircleList<Node>();
-		ns.addAll(this.neighbors);
+    public boolean hasDirectNeighbor(Node n) {
+        return this.getDirectNeighbors().contains(n);
+    }
 
-		if (ignoreNodes != null)
-			ns.removeAll(ignoreNodes);
+    public List<Node> getDirectNeighbors() {
+        return getDirectNeighbors(null);
+    }
 
-		return ns;
-	}
+    public List<Node> getDirectNeighbors(List<Node> ignoreNodes) {
+        List<Node> ns = new CircleList<Node>();
+        ns.addAll(this.neighbors);
 
-	public Node getNextClosestPeerExcluding(double loc,
-			List<Node> excludeNodes, boolean onlyCloserThenMe) {
+        if (ignoreNodes != null)
+            ns.removeAll(ignoreNodes);
 
-		List<_Node> neighbors = new ArrayList<_Node>();
-		// 1 hop neighbors
-		for (Node n : getDirectNeighbors(excludeNodes)) {
-			neighbors.add(new _Node(n, n.getLocation()));
-		}
+        return ns;
+    }
 
-		// 2 hop neighbors
-		getindirectNeighbors(excludeNodes, neighbors);
+    public Node getNextClosestPeerExcluding(double loc,
+            List<Node> excludeNodes, boolean onlyCloserThenMe) {
 
-		_Node closest = null;
-		double closestDiff = 1;
-		for (_Node n : neighbors) {
-			double diff = DistanceTools.getDistance(n.getLocation(), loc);
+        List<_Node> neighbors = new ArrayList<_Node>();
+        // 1 hop neighbors
+        for (Node n : getDirectNeighbors(excludeNodes)) {
+            neighbors.add(new _Node(n, n.getLocation()));
+        }
 
-			if (closest == null) {
-				closest = n;
-				closestDiff = diff;
-				continue;
-			}
-			if (diff < closestDiff) {
-				closest = n;
-				closestDiff = diff;
-			}
-		}
+        // 2 hop neighbors
+        getindirectNeighbors(excludeNodes, neighbors);
 
-		if (closest == null)
-			return null;
-		if (onlyCloserThenMe
-				&& closestDiff > DistanceTools.getDistance(this.getLocation(), loc))
-			return null;
+        _Node closest = null;
+        double closestDiff = 1;
+        for (_Node n : neighbors) {
+            double diff = DistanceTools.getDistance(n.getLocation(), loc);
 
-		return closest.getNode();
-	}
+            if (closest == null) {
+                closest = n;
+                closestDiff = diff;
+                continue;
+            }
+            if (diff < closestDiff) {
+                closest = n;
+                closestDiff = diff;
+            }
+        }
 
-	private void getindirectNeighbors(List<Node> excludeNodes,
-			List<_Node> neighbors) {
-		for (Node n : getDirectNeighbors(excludeNodes)) {
-			for (Node n2 : n.getDirectNeighbors(excludeNodes)) {
-				Node tmp = new Node(n2.getLocation(), "");
-				if (!neighbors.contains(tmp)) {
-					neighbors.add(new _Node(n, tmp.getLocation()));
-				} else {
-					// increment tie counter
-					neighbors.get(neighbors.indexOf(tmp)).tie();
-				}
-			}
-		}
-	}
+        if (closest == null)
+            return null;
+        if (onlyCloserThenMe
+                && closestDiff > DistanceTools.getDistance(this.getLocation(),
+                        loc))
+            return null;
 
-	@Override
-	public String toString() {
-		return this.getLocation() + " {" + this.id + "}";
-	}
-	
-	public String serialize(){
-		StringBuilder b = new StringBuilder();
-		b.append(this.location);
-		b.append(DELIMITER);
-		b.append(this.id);
-		return b.toString();
-	}
-	
-	public static Node deserialize(String s){
-		String[] parts = s.split(DELIMITER);
-		double loc = Double.parseDouble(parts[0]);
-		return new Node(loc, parts[1]);
-	}
+        return closest.getNode();
+    }
 
-	public List<SubRange> getPathsOut() {
-		List<Node> ignoreNodes = new ArrayList<Node>();
-		ignoreNodes.add(this);
-		return getPathsOut(ignoreNodes, false);
-	}
+    private void getindirectNeighbors(List<Node> excludeNodes,
+            List<_Node> neighbors) {
+        for (Node n : getDirectNeighbors(excludeNodes)) {
+            for (Node n2 : n.getDirectNeighbors(excludeNodes)) {
+                Node tmp = new Node(n2.getLocation(), "");
+                if (!neighbors.contains(tmp)) {
+                    neighbors.add(new _Node(n, tmp.getLocation()));
+                } else {
+                    // increment tie counter
+                    neighbors.get(neighbors.indexOf(tmp)).tie();
+                }
+            }
+        }
+    }
 
-	public List<SubRange> getPathsOut(List<Node> ignoreNodes,
-			boolean includeSelf) {
-		List<_Node> allPeers = new CircleList<_Node>();
-		List<Node> directPeers = getDirectNeighbors(ignoreNodes);
+    @Override
+    public String toString() {
+        return this.getLocation() + " {" + this.id + "}";
+    }
 
-		// 2 hop neighbors
-		getindirectNeighbors(ignoreNodes, allPeers);
+    public String serialize() {
+        StringBuilder b = new StringBuilder();
+        b.append(this.location);
+        b.append(DELIMITER);
+        b.append(this.id);
+        return b.toString();
+    }
 
-		// direct peers get preference or peer of peer
-		allPeers.removeAll(directPeers); // remove peer of peer entry
-		for (Node n : directPeers) {
-			allPeers.add(new _Node(n, n.getLocation()));
-		}
+    public static Node deserialize(String s) {
+        String[] parts = s.split(DELIMITER);
+        double loc = Double.parseDouble(parts[0]);
+        return new Node(loc, parts[1]);
+    }
 
-		// add current node so it can detect when it is the closest
-		if (includeSelf)
-			allPeers.add(new _Node(this, this.getLocation()));
+    public List<SubRange> getPathsOut() {
+        List<Node> ignoreNodes = new ArrayList<Node>();
+        ignoreNodes.add(this);
+        return getPathsOut(ignoreNodes, false);
+    }
 
-		Collections.sort(allPeers);
+    public List<SubRange> getPathsOut(List<Node> ignoreNodes,
+            boolean includeSelf) {
+        List<_Node> allPeers = new CircleList<_Node>();
+        List<Node> directPeers = getDirectNeighbors(ignoreNodes);
 
-		// calculate the mid points
-		for (int i = 0; i < allPeers.size(); i++) {
-			allPeers.get(i).setMid(
-					DistanceTools.calcMidPt(allPeers.get(i).getLocation(), allPeers.get(i + 1)
-							.getLocation()));
-		}
+        // 2 hop neighbors
+        getindirectNeighbors(ignoreNodes, allPeers);
 
-		List<SubRange> rangesList = new CircleList<SubRange>();
-		for (int i = 0; i < allPeers.size(); i++) {
-			rangesList.add(new SubRange(allPeers.get(i).getNode(),
-					new Edge(allPeers.get(i - 1).getMid()), 
-					new Edge(allPeers.get(i).getMid()),
-					allPeers.get(i).getTieCount(),
-					allPeers.get(i).getNode() == this));
-		}
-		// buildRangeLists(rangesList, allPeers, 0);
+        // direct peers get preference or peer of peer
+        allPeers.removeAll(directPeers); // remove peer of peer entry
+        for (Node n : directPeers) {
+            allPeers.add(new _Node(n, n.getLocation()));
+        }
 
-		return rangesList;
-	}
+        // add current node so it can detect when it is the closest
+        if (includeSelf)
+            allPeers.add(new _Node(this, this.getLocation()));
 
-	private class _Node extends INode {
-		private Node node;
-		private double mid;
-		private int ties = 0;
+        Collections.sort(allPeers);
 
-		public _Node(double l) {
-			this.location = l;
-			this.tie();
-		}
+        // calculate the mid points
+        for (int i = 0; i < allPeers.size(); i++) {
+            allPeers.get(i).setMid(
+                    DistanceTools.calcMidPt(allPeers.get(i).getLocation(),
+                            allPeers.get(i + 1).getLocation()));
+        }
 
-		public _Node(Node n, double l) {
-			this(l);
-			this.node = n;
-		}
+        List<SubRange> rangesList = new CircleList<SubRange>();
+        for (int i = 0; i < allPeers.size(); i++) {
+            rangesList.add(new SubRange(allPeers.get(i).getNode(), new Edge(
+                    allPeers.get(i - 1).getMid()), new Edge(allPeers.get(i)
+                    .getMid()), allPeers.get(i).getTieCount(), allPeers.get(i)
+                    .getNode() == this));
+        }
+        // buildRangeLists(rangesList, allPeers, 0);
 
-		public void tie() {
-			this.ties++;
-		}
+        return rangesList;
+    }
 
-		public int getTieCount() {
-			return this.ties;
-		}
+    private class _Node extends INode {
+        private Node node;
+        private double mid;
+        private int ties = 0;
 
-		public Node getNode() {
-			return this.node;
-		}
+        public _Node(double l) {
+            this.location = l;
+            this.tie();
+        }
 
-		public void setMid(double m) {
-			this.mid = m;
-		}
+        public _Node(Node n, double l) {
+            this(l);
+            this.node = n;
+        }
 
-		public double getMid() {
-			return this.mid;
-		}
+        public void tie() {
+            this.ties++;
+        }
 
-		@Override
-		public String toString() {
-			return this.getLocation() + " (" + this.getNode().getLocation()
-					+ ")";
-		}
-	}
+        public int getTieCount() {
+            return this.ties;
+        }
+
+        public Node getNode() {
+            return this.node;
+        }
+
+        public void setMid(double m) {
+            this.mid = m;
+        }
+
+        public double getMid() {
+            return this.mid;
+        }
+
+        @Override
+        public String toString() {
+            return this.getLocation() + " (" + this.getNode().getLocation()
+                    + ")";
+        }
+    }
 }

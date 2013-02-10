@@ -8,309 +8,310 @@ import frp.utils.DistanceTools;
 
 public class Path implements Comparable<Object> {
 
-	private List<SubRange> ranges = new ArrayList<SubRange>();
-	private List<Integer> htls = new ArrayList<Integer>();
-	private SubRange range = null;
-	private boolean successful = true;
-	
-	private final static String DELIMITER = "::";
+    private List<SubRange> ranges = new ArrayList<SubRange>();
+    private List<Integer> htls = new ArrayList<Integer>();
+    private SubRange range = null;
+    private boolean successful = true;
 
-	public void setSuccess(boolean b) {
-		this.successful = b;
-	}
+    private final static String DELIMITER = "::";
 
-	public boolean getSuccess() {
-		return this.successful;
-	}
+    public void setSuccess(boolean b) {
+        this.successful = b;
+    }
 
-	public void setRange(SubRange range) {
-		this.range = range;
-	}
+    public boolean getSuccess() {
+        return this.successful;
+    }
 
-	public SubRange getRange() {
-		return this.range;
-	}
+    public void setRange(SubRange range) {
+        this.range = range;
+    }
 
-	public void addNodeAsRR(SubRange r, int htl) {
-		// if(this.nodes.contains(n))
-		// return;
-		this.ranges.add(r);
-		this.htls.add(htl);
-	}
+    public SubRange getRange() {
+        return this.range;
+    }
 
-	public void removeLastNode() {
-		this.ranges.remove(this.ranges.size() - 1);
-		this.htls.remove(this.htls.size() - 1);
-	}
+    public void addNodeAsRR(SubRange r, int htl) {
+        // if(this.nodes.contains(n))
+        // return;
+        this.ranges.add(r);
+        this.htls.add(htl);
+    }
 
-	public List<Node> getNodes() {
-		List<Node> nodes = new CircleList<Node>();
-		for (int i = 0; i < this.ranges.size(); i++) {
-			if (this.htls.get(i) <= 0)
-				break;
-			SubRange rr = this.ranges.get(i);
-			nodes.add(rr.getNode());
-		}
+    public void removeLastNode() {
+        this.ranges.remove(this.ranges.size() - 1);
+        this.htls.remove(this.htls.size() - 1);
+    }
 
-		return nodes;
-	}
+    public List<Node> getNodes() {
+        List<Node> nodes = new CircleList<Node>();
+        for (int i = 0; i < this.ranges.size(); i++) {
+            if (this.htls.get(i) <= 0)
+                break;
+            SubRange rr = this.ranges.get(i);
+            nodes.add(rr.getNode());
+        }
 
-	public List<Node> getExtraNodes() {
-		List<Node> nodes = new CircleList<Node>();
-		for (int i = 0; i < this.ranges.size(); i++) {
-			if (this.htls.get(i) > 0)
-				continue;
-			SubRange rr = this.ranges.get(i);
-			nodes.add(rr.getNode());
-		}
-		return nodes;
-	}
+        return nodes;
+    }
 
-	public Path clone() {
-		Path p = new Path();
-		p.ranges.addAll(this.ranges);
-		p.htls.addAll(this.htls);
-		p.range = this.range;
-		return p;
-	}
+    public List<Node> getExtraNodes() {
+        List<Node> nodes = new CircleList<Node>();
+        for (int i = 0; i < this.ranges.size(); i++) {
+            if (this.htls.get(i) > 0)
+                continue;
+            SubRange rr = this.ranges.get(i);
+            nodes.add(rr.getNode());
+        }
+        return nodes;
+    }
 
-	public double getPathConfidence() {
-		return 1.0 / (double) getTieCount(false);
-	}
+    @Override
+    public Path clone() {
+        Path p = new Path();
+        p.ranges.addAll(this.ranges);
+        p.htls.addAll(this.htls);
+        p.range = this.range;
+        return p;
+    }
 
-	public double getPathConfidenceWithProbStoreNodes() {
-		return 1.0 / (double) getTieCount(true);
-	}
+    public double getPathConfidence() {
+        return 1.0 / getTieCount(false);
+    }
 
-	public int getTieCount(boolean includeProbStore) {
-		return getTieCountToNode(null, includeProbStore);
-	}
+    public double getPathConfidenceWithProbStoreNodes() {
+        return 1.0 / getTieCount(true);
+    }
 
-	private int getTieCountToNode(Node stopNode, boolean includeProbStore) {
-		int tie = 0;
-		int size = 0;
-		for (int i = 0; i < this.ranges.size(); i++) {
+    public int getTieCount(boolean includeProbStore) {
+        return getTieCountToNode(null, includeProbStore);
+    }
 
-			// stop if not including the probably storage nodes
-			if (!includeProbStore && this.htls.get(i) <= 0)
-				break;
+    private int getTieCountToNode(Node stopNode, boolean includeProbStore) {
+        int tie = 0;
+        int size = 0;
+        for (int i = 0; i < this.ranges.size(); i++) {
 
-			SubRange rr = this.ranges.get(i);
-			tie += rr.getTieCount();
-			size++;
+            // stop if not including the probably storage nodes
+            if (!includeProbStore && this.htls.get(i) <= 0)
+                break;
 
-			if (rr.getNode().equals(stopNode))
-				break;
-		}
-		return tie - size + 1;
-	}
-	
-	/*
-	 * Check if either path is a sub set of the other
-	 */
-	public boolean isPathSubset(Path p, Node stopNode){
-		List<Node> myPath = this.getPathUpToCacheAbleNode(stopNode, -1);
-		List<Node> theirPath = this.getPathUpToCacheAbleNode(stopNode, -1);
-		
-		if(myPath.size() != theirPath.size())
-			return false;
-		
-		for( int i =0; i < myPath.size(); i++){
-			if(!myPath.get(i).equals(theirPath.get(i)))
-				return false;
-		}
-		
-		return true;
-	}
+            SubRange rr = this.ranges.get(i);
+            tie += rr.getTieCount();
+            size++;
 
-	public List<Node> getPathUpToCacheAbleNode(Node stop, int hopReset) {
-		List<Node> nodes = new ArrayList<Node>();
-		for (int i = 0; i < this.ranges.size(); i++) {
-			SubRange rr = this.ranges.get(i);
-			nodes.add(rr.getNode());
-			if (i > 0 && this.htls.get(i) <= hopReset
-					&& rr.getNode().equals(stop))
-				break;
-		}
-		return nodes;
-	}
+            if (rr.getNode().equals(stopNode))
+                break;
+        }
+        return tie - size + 1;
+    }
 
-	public List<Node> getProbableStoreNodes(int hopReset) {
+    /*
+     * Check if either path is a sub set of the other
+     */
+    public boolean isPathSubset(Path p, Node stopNode) {
+        List<Node> myPath = this.getPathUpToCacheAbleNode(stopNode, -1);
+        List<Node> theirPath = this.getPathUpToCacheAbleNode(stopNode, -1);
 
-		List<Node> nodes = new ArrayList<Node>();
-		for (int i = 0; i < this.htls.size(); i++) {
-			// htl is positive
-			// htl is <= hopReset
-			// it is not the first node in path
-			if (this.htls.get(i) > 0 && i > 0 && this.htls.get(i) <= hopReset)
-				nodes.add(this.ranges.get(i).getNode());
-			// first node with htl of 1
+        if (myPath.size() != theirPath.size())
+            return false;
 
-		}
+        for (int i = 0; i < myPath.size(); i++) {
+            if (!myPath.get(i).equals(theirPath.get(i)))
+                return false;
+        }
 
-		return nodes;
-	}
+        return true;
+    }
 
-	public List<String> getProbableStoreNodeIds(int hopReset) {
+    public List<Node> getPathUpToCacheAbleNode(Node stop, int hopReset) {
+        List<Node> nodes = new ArrayList<Node>();
+        for (int i = 0; i < this.ranges.size(); i++) {
+            SubRange rr = this.ranges.get(i);
+            nodes.add(rr.getNode());
+            if (i > 0 && this.htls.get(i) <= hopReset
+                    && rr.getNode().equals(stop))
+                break;
+        }
+        return nodes;
+    }
 
-		List<Node> nodes = getProbableStoreNodes(hopReset);
-		List<String> nodeIds = new ArrayList<String>();
+    public List<Node> getProbableStoreNodes(int hopReset) {
 
-		for (Node n : nodes) {
-			nodeIds.add(n.getID());
-		}
+        List<Node> nodes = new ArrayList<Node>();
+        for (int i = 0; i < this.htls.size(); i++) {
+            // htl is positive
+            // htl is <= hopReset
+            // it is not the first node in path
+            if (this.htls.get(i) > 0 && i > 0 && this.htls.get(i) <= hopReset)
+                nodes.add(this.ranges.get(i).getNode());
+            // first node with htl of 1
 
-		return nodeIds;
-	}
+        }
 
-	public Node getStartNode() {
-		if (this.ranges.isEmpty())
-			return null;
-		return this.ranges.get(0).getNode();
-	}
+        return nodes;
+    }
 
-	private boolean equalPath(Path cmp) {
-		if (cmp == null)
-			return false;
-		if (this.getNodes().size() != cmp.getNodes().size())
-			return false;
-		for (int i = 0; i < this.getNodes().size(); i++) {
-			if (!this.getNodes().get(i).equals(cmp.getNodes().get(i))) {
-				return false;
-			}
-			if (this.ranges.get(i).getTieCount() != cmp.ranges.get(i)
-					.getTieCount()) {
-				return false;
-			}
-		}
-		return true;
-	}
+    public List<String> getProbableStoreNodeIds(int hopReset) {
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
-		if (!(obj instanceof Path))
-			return false;
+        List<Node> nodes = getProbableStoreNodes(hopReset);
+        List<String> nodeIds = new ArrayList<String>();
 
-		Path r = (Path) obj;
-		return this.equalPath(r);
-	}
+        for (Node n : nodes) {
+            nodeIds.add(n.getID());
+        }
 
-	@Override
-	public int compareTo(Object obj) {
-		if (obj == null)
-			return 1;
-		if (!(obj instanceof Path))
-			return 1;
+        return nodeIds;
+    }
 
-		Path r = (Path) obj;
-		return getRange().compareTo(r.getRange());
-	}
+    public Node getStartNode() {
+        if (this.ranges.isEmpty())
+            return null;
+        return this.ranges.get(0).getNode();
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder out = new StringBuilder();
-		if (!getSuccess())
-			out.append("FAILED ");
+    private boolean equalPath(Path cmp) {
+        if (cmp == null)
+            return false;
+        if (this.getNodes().size() != cmp.getNodes().size())
+            return false;
+        for (int i = 0; i < this.getNodes().size(); i++) {
+            if (!this.getNodes().get(i).equals(cmp.getNodes().get(i))) {
+                return false;
+            }
+            if (this.ranges.get(i).getTieCount() != cmp.ranges.get(i)
+                    .getTieCount()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-		out.append("| 1/");
-		out.append(getTieCount(false));
-		out.append(" | ");
-		out.append( DistanceTools.round( 1.0 / getTieCount(false) ));
-		out.append(" | ");
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (!(obj instanceof Path))
+            return false;
 
-		// out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0
-		// / getTieCount(true) + " | ";
+        Path r = (Path) obj;
+        return this.equalPath(r);
+    }
 
-		out.append(getRange());
-		out.append(" -> ");
+    @Override
+    public int compareTo(Object obj) {
+        if (obj == null)
+            return 1;
+        if (!(obj instanceof Path))
+            return 1;
 
-		out.append(toStringSimpleFillPath());
+        Path r = (Path) obj;
+        return getRange().compareTo(r.getRange());
+    }
 
-		return out.toString();
-	}
-	
-	public String serialize(){
-		StringBuilder b = new StringBuilder();
-		b.append(successful);
-		b.append(DELIMITER);
-		b.append(range.serialize());
-		b.append(DELIMITER);
-		
-		for(int i = 0; i < this.ranges.size(); i++){
-			SubRange r = this.ranges.get(i);
-			int htl = this.htls.get(i);
-			
-			b.append(r.serialize());
-			b.append(DELIMITER);
-			b.append(htl);
-			b.append(DELIMITER);
-		}
-		
-		return b.toString();
-	}
-	
-	public static Path deserialize(String s){
-		String[] parts = s.split(DELIMITER);
-		
-		Boolean succ = Boolean.parseBoolean(parts[0]);
-		SubRange r = SubRange.deserialize(parts[1]);
-		
-		Path p = new Path();
-		p.setSuccess(succ);
-		p.setRange(r);
-		
-		for(int i = 2; i < parts.length; i = i + 2){
-			SubRange sr = SubRange.deserialize(parts[i]);
-			int htl = Integer.parseInt(parts[i + 1]);
-			
-			p.addNodeAsRR(sr, htl);
-		}
-		
-		return p;
-	}
-	
-	public String toStringSimpleFillPath(){
-		StringBuilder out = new StringBuilder();
-		out.append(toStringSimple());
-		
-		String extra = toStringExtraNodesSimple();
-		if(!extra.isEmpty()){
-			out.append(">>EXTRA>> ");
-			out.append(extra);
-		}
+    @Override
+    public String toString() {
+        StringBuilder out = new StringBuilder();
+        if (!getSuccess())
+            out.append("FAILED ");
 
-		return out.toString();
-	}
+        out.append("| 1/");
+        out.append(getTieCount(false));
+        out.append(" | ");
+        out.append(DistanceTools.round(1.0 / getTieCount(false)));
+        out.append(" | ");
 
-	public String toStringSimple() {
-		StringBuilder out = new StringBuilder();
+        // out += "| w/ extra storage 1/" + getTieCount(true) + " " + 1.0
+        // / getTieCount(true) + " | ";
 
-		for (int i = 0; i < this.ranges.size(); i++) {
-			if (this.htls.get(i) <= 0)
-				break;
-			out.append(this.ranges.get(i).getNode().getID());
-			out.append("(");
-			out.append(this.htls.get(i));
-			out.append("), ");
-		}
+        out.append(getRange());
+        out.append(" -> ");
 
-		return out.toString();
-	}
+        out.append(toStringSimpleFillPath());
 
-	public String toStringExtraNodesSimple() {
-		StringBuilder out = new StringBuilder();
+        return out.toString();
+    }
 
-		for (int i = 0; i < this.ranges.size(); i++) {
-			if (this.htls.get(i) > 0)
-				continue;
-			out.append(this.ranges.get(i).getNode().getID());
-			out.append("(");
-			out.append(this.htls.get(i));
-			out.append("), ");
-		}
+    public String serialize() {
+        StringBuilder b = new StringBuilder();
+        b.append(successful);
+        b.append(DELIMITER);
+        b.append(range.serialize());
+        b.append(DELIMITER);
 
-		return out.toString();
-	}
+        for (int i = 0; i < this.ranges.size(); i++) {
+            SubRange r = this.ranges.get(i);
+            int htl = this.htls.get(i);
+
+            b.append(r.serialize());
+            b.append(DELIMITER);
+            b.append(htl);
+            b.append(DELIMITER);
+        }
+
+        return b.toString();
+    }
+
+    public static Path deserialize(String s) {
+        String[] parts = s.split(DELIMITER);
+
+        Boolean succ = Boolean.parseBoolean(parts[0]);
+        SubRange r = SubRange.deserialize(parts[1]);
+
+        Path p = new Path();
+        p.setSuccess(succ);
+        p.setRange(r);
+
+        for (int i = 2; i < parts.length; i = i + 2) {
+            SubRange sr = SubRange.deserialize(parts[i]);
+            int htl = Integer.parseInt(parts[i + 1]);
+
+            p.addNodeAsRR(sr, htl);
+        }
+
+        return p;
+    }
+
+    public String toStringSimpleFillPath() {
+        StringBuilder out = new StringBuilder();
+        out.append(toStringSimple());
+
+        String extra = toStringExtraNodesSimple();
+        if (!extra.isEmpty()) {
+            out.append(">>EXTRA>> ");
+            out.append(extra);
+        }
+
+        return out.toString();
+    }
+
+    public String toStringSimple() {
+        StringBuilder out = new StringBuilder();
+
+        for (int i = 0; i < this.ranges.size(); i++) {
+            if (this.htls.get(i) <= 0)
+                break;
+            out.append(this.ranges.get(i).getNode().getID());
+            out.append("(");
+            out.append(this.htls.get(i));
+            out.append("), ");
+        }
+
+        return out.toString();
+    }
+
+    public String toStringExtraNodesSimple() {
+        StringBuilder out = new StringBuilder();
+
+        for (int i = 0; i < this.ranges.size(); i++) {
+            if (this.htls.get(i) > 0)
+                continue;
+            out.append(this.ranges.get(i).getNode().getID());
+            out.append("(");
+            out.append(this.htls.get(i));
+            out.append("), ");
+        }
+
+        return out.toString();
+    }
 }

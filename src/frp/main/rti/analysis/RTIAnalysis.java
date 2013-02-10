@@ -22,108 +22,112 @@ import frp.routing.Topology;
 import frp.utils.CmdLineTools;
 
 public class RTIAnalysis {
-	private static final String DHTL_COUNT = "1";
+    private static final String DHTL_COUNT = "1";
 
-	private static final int I_TOP = 0;
-	private static final int I_OUT = 1;
-	private static final int I_HTL = 2;
-	private static final int I_DHTL = 3;
-	private static final int I_MAGS = 4;
-	private static final int I_EXTRA = 5;
-	private static final int I_HELP = 6;
-	private static final String[][] PROG_ARGS = {
-			{ "-t", "(required) Topology file name." },
-			{ "-o", "(required) Output file name." },
-			{ "-htl", "(required) Max hops to live count." },
-			{"-dhtl", "(optional) Default:1, Specify the number of deterministic hops to live to account for." },
-			{ "-mags", "(optional, Default = node count) Max Attack Group Size." },
-			{ "-extra", "(optional, Default = null) File name for extra debug output files." },
-			{ "-h", "help command. Prints available arguments." } };
+    private static final int I_TOP = 0;
+    private static final int I_OUT = 1;
+    private static final int I_HTL = 2;
+    private static final int I_DHTL = 3;
+    private static final int I_MAGS = 4;
+    private static final int I_EXTRA = 5;
+    private static final int I_HELP = 6;
+    private static final String[][] PROG_ARGS = {
+            { "-t", "(required) Topology file name." },
+            { "-o", "(required) Output file name." },
+            { "-htl", "(required) Max hops to live count." },
+            {
+                    "-dhtl",
+                    "(optional) Default:1, Specify the number of deterministic hops to live to account for." },
+            { "-mags",
+                    "(optional, Default = node count) Max Attack Group Size." },
+            { "-extra",
+                    "(optional, Default = null) File name for extra debug output files." },
+            { "-h", "help command. Prints available arguments." } };
 
-	private RTIAnalysis(String[] args) {
-		try {
-			List<String> lwArgs = Arrays.asList(args);
+    private RTIAnalysis(String[] args) {
+        try {
+            List<String> lwArgs = Arrays.asList(args);
 
-			if (lwArgs.contains(CmdLineTools.getName(PROG_ARGS, I_HELP))) {
-				System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
-				return;
-			}
+            if (lwArgs.contains(CmdLineTools.getName(PROG_ARGS, I_HELP))) {
+                System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
+                return;
+            }
 
-			// / Arguments
-			String outputFileName = CmdLineTools.getRequiredArg(
-					CmdLineTools.getName(PROG_ARGS, I_OUT), lwArgs);
+            // / Arguments
+            String outputFileName = CmdLineTools.getRequiredArg(
+                    CmdLineTools.getName(PROG_ARGS, I_OUT), lwArgs);
 
-			String topologyFileName = CmdLineTools.getRequiredArg(
-					CmdLineTools.getName(PROG_ARGS, I_TOP), lwArgs);
+            String topologyFileName = CmdLineTools.getRequiredArg(
+                    CmdLineTools.getName(PROG_ARGS, I_TOP), lwArgs);
 
-			// Max Attack Group Size
-			int maxAGS = Integer.parseInt(CmdLineTools.getArg(
-					CmdLineTools.getName(PROG_ARGS, I_MAGS), lwArgs, "0"));
+            // Max Attack Group Size
+            int maxAGS = Integer.parseInt(CmdLineTools.getArg(
+                    CmdLineTools.getName(PROG_ARGS, I_MAGS), lwArgs, "0"));
 
-			// Max HTL
-			int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(
-					CmdLineTools.getName(PROG_ARGS, I_HTL), lwArgs));
-			
-			// Deterministic HTL
-			String dhtlString = CmdLineTools.getArg(CmdLineTools.getName(
-					PROG_ARGS, I_DHTL), lwArgs, DHTL_COUNT);
-			int dhtl = Integer.parseInt(dhtlString);
-			
-			String extraFileName = CmdLineTools.getArg(
-					CmdLineTools.getName(PROG_ARGS, I_EXTRA), lwArgs, "");
-			// / END: Arguments
+            // Max HTL
+            int maxHTL = Integer.parseInt(CmdLineTools.getRequiredArg(
+                    CmdLineTools.getName(PROG_ARGS, I_HTL), lwArgs));
 
-			// output stream
-			File outputFile = new File(outputFileName);
-			PrintStream outputWriter = new PrintStream(outputFile);
+            // Deterministic HTL
+            String dhtlString = CmdLineTools
+                    .getArg(CmdLineTools.getName(PROG_ARGS, I_DHTL), lwArgs,
+                            DHTL_COUNT);
+            int dhtl = Integer.parseInt(dhtlString);
 
-			// topology
-			TopologyFileReaderManager topReader = new TopologyFileReaderManager();
-			Topology topology = topReader.readFromFile(topologyFileName);
-			
-			// Max Attack Group Size
-			if(maxAGS < 1)
-				maxAGS = topology.getAllNodes().size();
+            String extraFileName = CmdLineTools.getArg(
+                    CmdLineTools.getName(PROG_ARGS, I_EXTRA), lwArgs, "");
+            // / END: Arguments
 
-			// / Get inputs to the analysis code
-			// Calculate intersections
-			RTIPrediction rtiPrediction = new RTIPrediction();
-			List<AttackPair> attackPairs = rtiPrediction.run(topology,
-					maxHTL, extraFileName, dhtl);
-			// / END: Get inputs to the analysis code
+            // output stream
+            File outputFile = new File(outputFileName);
+            PrintStream outputWriter = new PrintStream(outputFile);
 
-			// / start of the interesting part of the code
-			// Calculate the effectiveness for different attack node set sizes
+            // topology
+            TopologyFileReaderManager topReader = new TopologyFileReaderManager();
+            Topology topology = topReader.readFromFile(topologyFileName);
 
-			
-			// print out attack pairs
-			/*File attackPairFile = new File(outputFileName + ".attackPairs");
-			PrintStream attackPairWriter = new PrintStream(attackPairFile);
-			for (AttackPair p : attackPairs) {
-				attackPairWriter.println(p);
-			}
-			attackPairWriter.close();*/
+            // Max Attack Group Size
+            if (maxAGS < 1)
+                maxAGS = topology.getAllNodes().size();
 
-			outputWriter.println(AttackSizeSet.getCSVHeader());
-			AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
-					topology.getAllNodes());
-			outputWriter.println(attSet.toStringCSV());
-			
-			outputWriter.close();
+            // / Get inputs to the analysis code
+            // Calculate intersections
+            RTIPrediction rtiPrediction = new RTIPrediction();
+            List<AttackPair> attackPairs = rtiPrediction.run(topology, maxHTL,
+                    extraFileName, dhtl);
+            // / END: Get inputs to the analysis code
 
-		} catch (Exception ex) {
-			System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
-			System.out.println(ex.getMessage());
-			System.out.println("!!!Error closing program!!!");
-		}
-	}
+            // / start of the interesting part of the code
+            // Calculate the effectiveness for different attack node set sizes
 
-	/**
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		new RTIAnalysis(args);
-	}
+            // print out attack pairs
+            /*
+             * File attackPairFile = new File(outputFileName + ".attackPairs");
+             * PrintStream attackPairWriter = new PrintStream(attackPairFile);
+             * for (AttackPair p : attackPairs) { attackPairWriter.println(p); }
+             * attackPairWriter.close();
+             */
+
+            outputWriter.println(AttackSizeSet.getCSVHeader());
+            AttackSizeSet attSet = new AttackSizeSet(maxAGS, attackPairs,
+                    topology.getAllNodes());
+            outputWriter.println(attSet.toStringCSV());
+
+            outputWriter.close();
+
+        } catch (Exception ex) {
+            System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
+            System.out.println(ex.getMessage());
+            System.out.println("!!!Error closing program!!!");
+        }
+    }
+
+    /**
+     * 
+     * @param args
+     */
+    public static void main(String[] args) {
+        new RTIAnalysis(args);
+    }
 
 }

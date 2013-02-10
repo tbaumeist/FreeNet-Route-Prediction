@@ -11,14 +11,14 @@ import frp.gephi.GephiHelper;
 
 public class Test_Gephi {
 
-	@Test
-	public void loadGraph() throws Exception {
-		GephiHelper gHelper = new GephiHelper();
+    @Test
+    public void loadGraph() throws Exception {
+        GephiHelper gHelper = new GephiHelper();
 
-		String topFileName = Helper.getResourcePath("proper.topology-55-4.dot");
-		DirectedGraph graph = gHelper.loadGraphFile(topFileName);
+        String topFileName = Helper.getResourcePath("proper.topology-55-4.dot");
+        DirectedGraph graph = gHelper.loadGraphFile(topFileName);
 
-		assertTrue(graph.getNodeCount() == 55);
-		assertTrue( graph.getEdgeCount() == 220);
-	}
+        assertTrue(graph.getNodeCount() == 55);
+        assertTrue(graph.getEdgeCount() == 220);
+    }
 }

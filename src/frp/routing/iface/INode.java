@@ -3,46 +3,53 @@ package frp.routing.iface;
 /*
  * Interface for a node type object
  */
-public abstract class INode implements Comparable<Object>{
-	protected double location;
-	protected String id = "";
-	
-	public double getLocation(){ return this.location; }
-	public String getID(){ return this.id; }
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
-		if (this == obj)
-			return true;
+public abstract class INode implements Comparable<Object> {
+    protected double location;
+    protected String id = "";
 
-		if (!(obj instanceof INode))
-			return false;
-		INode node = (INode) obj;
-		if(node.getID().isEmpty() || getID().isEmpty())
-			return node.getLocation() == getLocation();
-		return node.getLocation() == getLocation() && node.getID().equals(getID());
-	}
+    public double getLocation() {
+        return this.location;
+    }
 
-	@Override
-	public int hashCode() {
-		return new Double(getLocation()).hashCode();
-	}
+    public String getID() {
+        return this.id;
+    }
 
-	@Override
-	public int compareTo(Object obj) {
-		if (obj == null)
-			return 1;
-		if (!(obj instanceof INode))
-			return 1;
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (this == obj)
+            return true;
 
-		INode node = (INode) obj;
-		return new Double(getLocation()).compareTo(new Double(node.getLocation()));
-	}
-	
-	@Override
-	public String toString() {
-		return this.getLocation() + "";
-	}
+        if (!(obj instanceof INode))
+            return false;
+        INode node = (INode) obj;
+        if (node.getID().isEmpty() || getID().isEmpty())
+            return node.getLocation() == getLocation();
+        return node.getLocation() == getLocation()
+                && node.getID().equals(getID());
+    }
+
+    @Override
+    public int hashCode() {
+        return new Double(getLocation()).hashCode();
+    }
+
+    @Override
+    public int compareTo(Object obj) {
+        if (obj == null)
+            return 1;
+        if (!(obj instanceof INode))
+            return 1;
+
+        INode node = (INode) obj;
+        return new Double(getLocation()).compareTo(new Double(node
+                .getLocation()));
+    }
+
+    @Override
+    public String toString() {
+        return this.getLocation() + "";
+    }
 }

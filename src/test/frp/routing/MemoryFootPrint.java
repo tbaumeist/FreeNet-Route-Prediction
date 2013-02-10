@@ -16,61 +16,65 @@ import frp.utils.Pair;
 import frp.utils.Progresser;
 
 public class MemoryFootPrint extends RoutingManager {
-	private int mb = 1024 * 1024;
-	private final static int maxHTL = 5;
-	private final static int detHTL = 0;
-	
-	public MemoryFootPrint(){
-		super(maxHTL, detHTL);
-	}
-	
-	@Test
-	public void testNoCache() throws Exception {
-		
-		Topology top = Helper.load125_10Topology();
-		List<Pair<Double, String>> startNodes = checkStartNodes(null, top);
-		
-		System.out.println("Memory footprint no cache ...");
-		Progresser prog = new Progresser(System.out, startNodes.size() * 2);
-		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
-				startNodes, top, true);
-		assertTrue(pathInsertSets != null);
+    private int mb = 1024 * 1024;
+    private final static int maxHTL = 5;
+    private final static int detHTL = 0;
 
-		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(prog,
-				startNodes, top, false);
-		assertTrue(pathRequestSets != null);
-		
-		Runtime runtime = Runtime.getRuntime();
-		System.out.println("\tUsed memory no cache: " + (runtime.totalMemory() - runtime.freeMemory()) / this.mb + "mb");
-	}
-	
-	@Test
-	public void testCache() throws Exception {
-		
-		Topology top = Helper.load125_10Topology();
-		List<Pair<Double, String>> startNodes = checkStartNodes(null, top);
-		
-		System.out.println("Memory footprint cache ...");
-		Progresser prog = new Progresser(System.out, startNodes.size() * 2);
-		List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
-				startNodes, top, true);
-		assertTrue(pathInsertSets != null);
+    public MemoryFootPrint() {
+        super(maxHTL, detHTL);
+    }
 
-		// save the predicted insert paths
-		File tmpStorage = File.createTempFile("RTI", "Insert");
-		PathSet.savePathSetList(pathInsertSets, tmpStorage.getAbsolutePath());
-		pathInsertSets = null;
-		System.gc();
+    @Test
+    public void testNoCache() throws Exception {
 
-		List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(prog,
-				startNodes, top, false);
-		
-		Runtime runtime = Runtime.getRuntime();
-		System.out.println("\tUsed memory with cache: " + (runtime.totalMemory() - runtime.freeMemory()) / this.mb + "mb");
-		
-		assertTrue(pathRequestSets != null);
-		
-		PathSet.removeAllSavedPathSetList(tmpStorage.getAbsolutePath());
-	}
+        Topology top = Helper.load125_10Topology();
+        List<Pair<Double, String>> startNodes = checkStartNodes(null, top);
+
+        System.out.println("Memory footprint no cache ...");
+        Progresser prog = new Progresser(System.out, startNodes.size() * 2);
+        List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
+                startNodes, top, true);
+        assertTrue(pathInsertSets != null);
+
+        List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(prog,
+                startNodes, top, false);
+        assertTrue(pathRequestSets != null);
+
+        Runtime runtime = Runtime.getRuntime();
+        System.out.println("\tUsed memory no cache: "
+                + (runtime.totalMemory() - runtime.freeMemory()) / this.mb
+                + "mb");
+    }
+
+    @Test
+    public void testCache() throws Exception {
+
+        Topology top = Helper.load125_10Topology();
+        List<Pair<Double, String>> startNodes = checkStartNodes(null, top);
+
+        System.out.println("Memory footprint cache ...");
+        Progresser prog = new Progresser(System.out, startNodes.size() * 2);
+        List<PathSet[]> pathInsertSets = calculateRoutesFromNodes(prog,
+                startNodes, top, true);
+        assertTrue(pathInsertSets != null);
+
+        // save the predicted insert paths
+        File tmpStorage = File.createTempFile("RTI", "Insert");
+        PathSet.savePathSetList(pathInsertSets, tmpStorage.getAbsolutePath());
+        pathInsertSets = null;
+        System.gc();
+
+        List<PathSet[]> pathRequestSets = calculateRoutesFromNodes(prog,
+                startNodes, top, false);
+
+        Runtime runtime = Runtime.getRuntime();
+        System.out.println("\tUsed memory with cache: "
+                + (runtime.totalMemory() - runtime.freeMemory()) / this.mb
+                + "mb");
+
+        assertTrue(pathRequestSets != null);
+
+        PathSet.removeAllSavedPathSetList(tmpStorage.getAbsolutePath());
+    }
 
 }

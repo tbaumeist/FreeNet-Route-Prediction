@@ -5,40 +5,40 @@ import java.util.List;
 import frp.routing.*;
 
 public class InsertNodeIntersections {
-	private Node node;
-	private List<SubRangeIntersections> locIntersects = new ArrayList<SubRangeIntersections>();
+    private Node node;
+    private List<SubRangeIntersections> locIntersects = new ArrayList<SubRangeIntersections>();
 
-	public InsertNodeIntersections(Node n) {
-		this.node = n;
-	}
+    public InsertNodeIntersections(Node n) {
+        this.node = n;
+    }
 
-	public void calculateIntersection(PathSet pathInsertSet,
-			List<PathSet[]> pathRequestSets, int hopReset) {
+    public void calculateIntersection(PathSet pathInsertSet,
+            List<PathSet[]> pathRequestSets, int hopReset) {
 
-		if (!pathInsertSet.getStartNode().equals(this.node))
-			return;
-		for (Path p : pathInsertSet.getPaths()) {
-			this.locIntersects.add(new SubRangeIntersections(p,
-					pathRequestSets, hopReset));
-		}
-	}
+        if (!pathInsertSet.getStartNode().equals(this.node))
+            return;
+        for (Path p : pathInsertSet.getPaths()) {
+            this.locIntersects.add(new SubRangeIntersections(p,
+                    pathRequestSets, hopReset));
+        }
+    }
 
-	public List<SubRangeIntersections> getSubRangeIntersections() {
-		return this.locIntersects;
-	}
+    public List<SubRangeIntersections> getSubRangeIntersections() {
+        return this.locIntersects;
+    }
 
-	public Node getStartNode() {
-		return this.node;
-	}
+    public Node getStartNode() {
+        return this.node;
+    }
 
-	@Override
-	public String toString() {
-		String s = "Insert Node " + this.node;
+    @Override
+    public String toString() {
+        String s = "Insert Node " + this.node;
 
-		for (SubRangeIntersections loc : this.locIntersects) {
-			s += "\n\t" + loc;
-		}
+        for (SubRangeIntersections loc : this.locIntersects) {
+            s += "\n\t" + loc;
+        }
 
-		return s;
-	}
+        return s;
+    }
 }
