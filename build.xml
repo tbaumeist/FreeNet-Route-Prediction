@@ -13,6 +13,21 @@
 	</path>
 
 	<target name="CreateJars" description="Create Jar files" depends="clean, local-jars, global-jars" />
+	<target name="test" description="Run test cases" depends="CreateJars, j-unit" />
+
+	<!-- JUnit tests -->
+	<target name="j-unit">
+		<junit haltonfailure="yes">
+			<classpath>
+				<path refid="external.jars" />
+				<pathelement location="${main.build}" />
+			</classpath>
+			<formatter type="plain" usefile="false" />
+			<batchtest>
+				<fileset dir="${main.build}" includes="test/**/Test_*" />
+			</batchtest>
+		</junit>
+	</target>
 
 	<target name="clean">
 		<delete dir="${main.build}" />
@@ -31,7 +46,7 @@
 		<jar basedir="${main.build}" jarfile="${main.build}/jar/${main.jar}" includes="frp/" />
 		<zip destfile="${main.dist}/${main.jar}">
 			<zipgroupfileset dir="${main.lib}" includes="**/*.jar" excludes="junit.jar" />
-			<zipgroupfileset dir="${main.build}/jar" includes="**/*.jar" />
+			<zipgroupfileset dir="${main.build}/jar" includes="${main.jar}" />
 		</zip>
 		<copy tofile="${main.dist}/${main.noDepJar}" file="${main.build}/jar/${main.jar}"/>
 	</target>

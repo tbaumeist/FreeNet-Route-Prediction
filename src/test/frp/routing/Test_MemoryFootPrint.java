@@ -15,12 +15,12 @@ import frp.routing.Topology;
 import frp.utils.Pair;
 import frp.utils.Progresser;
 
-public class MemoryFootPrint extends RoutingManager {
+public class Test_MemoryFootPrint extends RoutingManager {
     private int mb = 1024 * 1024;
     private final static int maxHTL = 5;
     private final static int detHTL = 0;
 
-    public MemoryFootPrint() {
+    public Test_MemoryFootPrint() {
         super(maxHTL, detHTL);
     }
 

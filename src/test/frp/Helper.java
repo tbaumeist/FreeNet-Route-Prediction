@@ -8,7 +8,7 @@ import frp.dataFileReaders.TopologyFileReaderManager;
 import frp.routing.Topology;
 
 public class Helper {
-    private final static String resourcePath = "test/resources/";
+    private final static String resourcePath = "bin/test/resources/";
 
     public static String getResourcePath() {
         return new java.io.File("").getAbsolutePath() + File.separator
