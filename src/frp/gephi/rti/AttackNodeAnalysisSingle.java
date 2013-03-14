@@ -130,10 +130,10 @@ public class AttackNodeAnalysisSingle {
     public String printCSVGraphHeader() {
         StringBuilder b = new StringBuilder();
         b.append("Node Count,Peer Count,HTL,Set #");
-        b.append(",Clustering Coefficient,Network Diameter,Avg Path Length");
+        //b.append(",Clustering Coefficient,Network Diameter,Avg Path Length");
         // b.append(",Theoretical Node Reach,Theoretical Node Reach w/ Clustering(T /w C)");
-        for (int i = 1; i <= this.totalReachFields; i++)
-            b.append(",(Theo Node Reach /w CC) hop " + i);
+        //for (int i = 1; i <= this.totalReachFields; i++)
+        //    b.append(",(Theo Node Reach /w CC) hop " + i);
         // b.append(",Theoretical Node Reach w/ Clustering Method 2");
         for (int i = 1; i <= this.totalReachFields; i++)
             b.append(",Actual Node Reach Avg hop " + i);
@@ -162,26 +162,26 @@ public class AttackNodeAnalysisSingle {
         b.append(dataSetCount + ",");
 
         // Clustering Coefficient
-        ClusteringCoefficient cCoeff = new ClusteringCoefficient();
-        AttributeModel attributeModel = Lookup.getDefault()
-                .lookup(AttributeController.class).getModel();
-        GraphModel graphModel = graph.getGraphModel();
-        cCoeff.execute(graphModel, attributeModel);
-        b.append(cCoeff.getAverageClusteringCoefficient() + ",");
-
-        GraphDistance distance = new GraphDistance();
-        distance.execute(graphModel, attributeModel);
-        b.append(distance.getDiameter() + 1 + ",");
-        b.append(distance.getPathLength() + 1 + ",");
-
-        // theoretical node reach
-        double[] theoReach = this.calcTheoreticalReach(htl, peerCount,
-                cCoeff.getAverageClusteringCoefficient());
-        for (int i = 0; i < this.totalReachFields; i++) {
-            if (i < theoReach.length)
-                b.append(theoReach[i]);
-            b.append(",");
-        }
+//        ClusteringCoefficient cCoeff = new ClusteringCoefficient();
+//        AttributeModel attributeModel = Lookup.getDefault()
+//                .lookup(AttributeController.class).getModel();
+//        GraphModel graphModel = graph.getGraphModel();
+//        cCoeff.execute(graphModel, attributeModel);
+//        b.append(cCoeff.getAverageClusteringCoefficient() + ",");
+//
+//        GraphDistance distance = new GraphDistance();
+//        distance.execute(graphModel, attributeModel);
+//        b.append(distance.getDiameter() + 1 + ",");
+//        b.append(distance.getPathLength() + 1 + ",");
+//
+//        // theoretical node reach
+//        double[] theoReach = this.calcTheoreticalReach(htl, peerCount,
+//                cCoeff.getAverageClusteringCoefficient());
+//        for (int i = 0; i < this.totalReachFields; i++) {
+//            if (i < theoReach.length)
+//                b.append(theoReach[i]);
+//            b.append(",");
+//        }
 
         // b.append(this.calcTheoreticalReach2(htl, peerCount, cCoeff
         // .getAverageClusteringCoefficient())
