@@ -107,6 +107,7 @@ public class AttackNodeAnalysisSingle {
             System.out.println(CmdLineTools.toStringProgArgs(PROG_ARGS));
             System.out.println("!!!Error!!!");
             System.out.println(ex.getMessage());
+            ex.printStackTrace();
             System.out.println("!!!Closing program!!!");
         }
 
